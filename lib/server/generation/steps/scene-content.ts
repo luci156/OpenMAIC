@@ -6,6 +6,7 @@
  * caller resolves the model for the scene type's stage.
  */
 import { prepareVisionImages } from '../vision-images';
+import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
 import { callLLM } from '@/lib/ai/llm';
 import {
   applyOutlineFallbacks,
@@ -101,6 +102,7 @@ export async function generateSceneContent(
     userPrompt: string,
     images?: Array<{ id: string; src: string }>,
   ): Promise<string> => {
+    const scopedSystemPrompt = `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${systemPrompt}`;
     if (images?.length && hasVision) {
       const resolvedImages = await ctx.resolveVisionImages(images);
       const result = await callLLM(
@@ -108,7 +110,7 @@ export async function generateSceneContent(
           model: languageModel,
           // A run cancels the call when it loses its lease or its course.
           abortSignal: ctx.signal,
-          system: systemPrompt,
+          system: scopedSystemPrompt,
           messages: [
             {
               role: 'user' as const,
@@ -129,7 +131,7 @@ export async function generateSceneContent(
       {
         model: languageModel,
         abortSignal: ctx.signal,
-        system: systemPrompt,
+        system: scopedSystemPrompt,
         prompt: userPrompt,
         maxOutputTokens: modelInfo?.outputWindow,
         maxRetries: 0,

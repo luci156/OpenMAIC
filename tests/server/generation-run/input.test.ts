@@ -18,14 +18,23 @@ import {
 import { withRouteRetry } from '@/lib/server/generation/run/retry';
 
 describe('run input', () => {
+  it('rejects requests to generate lessons outside English and IELTS', () => {
+    const parsed = parseRunInput({ requirement: 'Cho tôi một bài học giải tích' });
+    expect(parsed).toEqual({
+      ok: false,
+      message: expect.stringMatching(/chỉ hỗ trợ học tiếng Anh/i),
+    });
+  });
+
   it('fills the defaults: no materials, generated agents, waiting outline review', () => {
-    expect(parseRunInput({ requirement: 'Teach fractions' })).toEqual({
+    expect(parseRunInput({ requirement: 'Teach IELTS vocabulary' })).toEqual({
       ok: true,
       value: {
-        requirement: 'Teach fractions',
+        requirement: 'Teach IELTS vocabulary',
         materialIds: [],
         interactive: false,
         taskEngine: false,
+        slideStyle: 'consistent-light',
         agents: { mode: 'auto' },
         outlineReview: 'wait',
       },
@@ -34,7 +43,7 @@ describe('run input', () => {
 
   it('keeps every field a run reads, and no keys or models', () => {
     const parsed = parseRunInput({
-      requirement: 'Teach fractions',
+      requirement: 'Teach IELTS vocabulary',
       materialIds: ['mat_00000000000000000000000000', 'mat_00000000000000000000000000'],
       interactive: true,
       taskEngine: true,
@@ -48,10 +57,11 @@ describe('run input', () => {
     expect(parsed).toEqual({
       ok: true,
       value: {
-        requirement: 'Teach fractions',
+        requirement: 'Teach IELTS vocabulary',
         materialIds: ['mat_00000000000000000000000000'],
         interactive: true,
         taskEngine: true,
+        slideStyle: 'consistent-light',
         agents: { mode: 'preset', agentIds: ['default-1', 'default-2'] },
         learnerProfile: { nickname: 'Sam' },
         outlineReview: 'auto',

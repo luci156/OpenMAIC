@@ -23,6 +23,7 @@ import { withRequestOwner } from '@/lib/server/identity/with-owner';
 import { ownerRetiredResponse, ownerWriteErrorResponse } from '@/lib/persistence/owner-merges';
 import { buildRequestOrigin, isValidClassroomId } from '@/lib/server/classroom-storage';
 import { decodeCourseRefs } from '@/lib/workbench/course-refs';
+import { getEnglishIeltsScopeRefusal } from '@/lib/prompts/english-ielts-scope';
 
 export const runtime = 'nodejs';
 
@@ -73,6 +74,8 @@ export async function POST(req: NextRequest) {
       `prompt exceeds the ${MAX_SESSION_TEXT_LENGTH} character limit`,
     );
   }
+  const scopeRefusal = getEnglishIeltsScopeRefusal(prompt);
+  if (scopeRefusal) return apiError('INVALID_REQUEST', 400, scopeRefusal);
   if (
     body.materialIds !== undefined &&
     (!Array.isArray(body.materialIds) || body.materialIds.some((id) => typeof id !== 'string'))

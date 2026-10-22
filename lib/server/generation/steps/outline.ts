@@ -18,6 +18,7 @@ import {
   logFallbackFired,
 } from '@/lib/server/llm-fallback';
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompts';
+import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
 import {
   formatImageDescription,
   formatImagePlaceholder,
@@ -510,6 +511,11 @@ async function prepareOutline(
   if (!prompts) {
     throw new StepRefusal<OutlineRefusal>('prompt-unavailable', 'Prompt template not found');
   }
+
+  prompts = {
+    ...prompts,
+    system: `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${prompts.system}`,
+  };
 
   ctx.log.info(
     `Generating outlines: "${requirements.requirement.substring(0, 50)}" [model=${modelString}]`,

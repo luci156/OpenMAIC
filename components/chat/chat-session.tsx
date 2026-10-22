@@ -11,6 +11,7 @@ import { CircleStop, MessageCircleMore } from 'lucide-react';
 import { InlineActionTag } from './inline-action-tag';
 import { useUserProfileStore } from '@/lib/store/user-profile';
 import { useSoftCloseCountdown } from './use-soft-close-countdown';
+import { TranslationToggle } from './translation-toggle';
 
 /** Extended message part type covering standard + custom action parts */
 interface MessagePart {
@@ -106,6 +107,10 @@ const MessageBubble = memo(function MessageBubble({
     (acc: number, p: MessagePart, i: number) => (p.type === 'text' && p.text ? i : acc),
     -1,
   );
+  const assistantText = parts
+    .filter((part) => part.type === 'text' && part.text)
+    .map((part) => part.text)
+    .join('\n');
 
   return (
     <div
@@ -152,6 +157,9 @@ const MessageBubble = memo(function MessageBubble({
           return null;
         })}
       </span>
+      {!isUser && !isLive && assistantText.trim() ? (
+        <TranslationToggle text={assistantText} className="mt-1" />
+      ) : null}
     </div>
   );
 });

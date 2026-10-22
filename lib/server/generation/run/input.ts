@@ -7,6 +7,7 @@ import { capBodyStream } from '@/lib/server/capped-stream';
 import { normalizeSceneOutlines } from '@/lib/server/generation/outline-schema';
 import { MAX_CLASSROOM_MATERIALS } from '@/lib/server/classroom-materials';
 import { isMaterialId } from '@/lib/server/materials/material-id';
+import { getEnglishIeltsScopeRefusal } from '@/lib/prompts/english-ielts-scope';
 import type { SceneOutline } from '@/lib/types/generation';
 
 import type { GenerationRunInput } from './types';
@@ -106,6 +107,8 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
       message: `requirement must be at most ${MAX_REQUIREMENT_CHARS} characters`,
     };
   }
+  const scopeRefusal = getEnglishIeltsScopeRefusal(requirement);
+  if (scopeRefusal) return { ok: false, message: scopeRefusal };
 
   let materialIds: string[] = [];
   if (body.materialIds !== undefined) {
@@ -125,6 +128,10 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
   if (!interactive.ok) return interactive;
   const taskEngine = optionalBoolean(body.taskEngine, 'taskEngine');
   if (!taskEngine.ok) return taskEngine;
+  const slideStyle = body.slideStyle ?? 'consistent-light';
+  if (slideStyle !== 'consistent-light' && slideStyle !== 'ai') {
+    return { ok: false, message: 'slideStyle must be "consistent-light" or "ai"' };
+  }
 
   let agents: GenerationRunInput['agents'] = { mode: 'auto' };
   if (body.agents !== undefined) {
@@ -208,6 +215,7 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
       materialIds,
       interactive: interactive.value,
       taskEngine: taskEngine.value,
+      slideStyle,
       agents,
       ...(learnerProfile ? { learnerProfile } : {}),
       outlineReview,

@@ -278,6 +278,7 @@ export async function generateSceneContent(
     // Route to widget generation (handles all 5 types)
     return generateWidgetContent(outline, aiCall, languageDirective, {
       allowProceduralSkill,
+      slideStyle: userRequirements?.slideStyle,
       logger: log,
       onFailure: options.onFailure,
     });
@@ -299,6 +300,7 @@ export async function generateSceneContent(
         baselineContent,
         log,
         options.onFailure,
+        userRequirements,
       );
     case 'quiz':
       return generateQuizContent(outline, aiCall, languageDirective, log, options.onFailure);
@@ -639,6 +641,7 @@ async function generateSlideContent(
   baselineContent?: GeneratedSlideContent,
   log: GenerationLogger = noopGenerationLogger,
   onFailure?: (failure: SceneContentFailure) => void,
+  userRequirements?: UserRequirements,
 ): Promise<GeneratedSlideContent | null> {
   // Build assigned images description for the prompt
   let assignedImagesText = '无可用图片，禁止插入任何 image 元素';
@@ -747,6 +750,9 @@ async function generateSlideContent(
     generatedImageEnabled,
     generatedVideoEnabled,
     mediaElementEnabled,
+    slideStyleDirective: userRequirements?.slideStyle === 'consistent-light'
+      ? 'CONSISTENT COURSE THEME (mandatory): Use a clean light presentation style on every slide in this course. Set the slide background to solid #F8FAFC. Use dark navy #0F172A for text, Inter as the font family where available, and violet #6D28D9 with restrained cyan #0891B2 as accents. Keep the same visual identity and typography across slides; vary layout only to suit the content. Do not use dark/black backgrounds, dark panels, or dark full-slide cards.'
+      : '',
   });
 
   if (!prompts) {
@@ -1274,6 +1280,7 @@ export async function generateWidgetContent(
   languageDirective?: string,
   options: {
     allowProceduralSkill?: boolean;
+    slideStyle?: 'consistent-light';
     logger?: GenerationLogger;
     onFailure?: (failure: SceneContentFailure) => void;
   } = {},
@@ -1390,6 +1397,10 @@ export async function generateWidgetContent(
     log.error(`Failed to build ${widgetType} prompt for: ${outline.title}`);
     options.onFailure?.({ code: 'prompt-unavailable' });
     return null;
+  }
+
+  if (options.slideStyle === 'consistent-light') {
+    prompts.system += `\n\n## Course-wide visual theme (mandatory)\nThis interactive scene belongs to a course using one consistent light visual identity. Use a light #F8FAFC page background, white or very light content panels, dark navy #0F172A text, Inter/Arial typography, violet #6D28D9 as the primary accent, and restrained cyan #0891B2 as a secondary accent. Keep controls, cards, spacing, typography, and visual density aligned with a clean university lesson presentation. Do not use black or dark full-screen backgrounds or dark panels. Preserve accessible contrast and retain semantic success/error colors where needed. The learner interactions and functionality must remain intact.`;
   }
 
   log.info(`Generating ${widgetType} widget for: ${outline.title}`);

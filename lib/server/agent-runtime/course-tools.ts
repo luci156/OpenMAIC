@@ -33,6 +33,7 @@ import type { Stage } from '@openmaic/dsl';
 
 import type { Scene } from '@/lib/types/stage';
 import { STAGE_WRITER_TOOL_NAMES } from '@/lib/agent-runtime/stage-writer-tools';
+import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
 import { buildDslCourseTools, DSL_COURSE_TOOL_NAMES } from './dsl-tools';
 import { CURRICULUM_ALLOWLIST } from './curriculum-tools';
 import { buildGenerationTools, GENERATION_TOOL_NAMES } from './generation-tools';
@@ -264,6 +265,7 @@ export const DSL_TOOLS_PROMPT = [
 
 /** Base runner identity/environment lines, shared by every runner prompt. */
 export const COURSE_SYSTEM_PROMPT = [
+  ENGLISH_IELTS_SCOPE_PROMPT,
   'You are a capable assistant working in a durable background session.',
   'Complete the user request carefully and explain the result clearly.',
   'The conversation may pause, restart on another worker, or receive follow-up messages.',

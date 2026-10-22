@@ -131,12 +131,14 @@ interface FormState {
   requirement: string;
   interactiveMode: boolean;
   vocationalTestMode: boolean;
+  consistentSlideStyle: boolean;
 }
 
 const initialFormState: FormState = {
   requirement: '',
   interactiveMode: false,
   vocationalTestMode: false,
+  consistentSlideStyle: true,
 };
 
 function HomePage() {
@@ -589,6 +591,7 @@ function HomePage() {
         materialIds,
         interactive: form.vocationalTestMode ? true : form.interactiveMode,
         taskEngine: form.vocationalTestMode,
+        slideStyle: form.consistentSlideStyle ? 'consistent-light' : 'ai',
         capabilities,
       });
       router.push(`/generation-preview?run=${encodeURIComponent(run.id)}`);
@@ -836,6 +839,32 @@ function HomePage() {
                   }}
                 />
               </div>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={form.consistentSlideStyle}
+                    onClick={() => updateForm('consistentSlideStyle', !form.consistentSlideStyle)}
+                    className={cn(
+                      'inline-flex h-8 items-center gap-2 rounded-lg border px-2 text-[11px] font-medium transition-colors',
+                      form.consistentSlideStyle
+                        ? 'border-violet-300 bg-violet-50 text-violet-800 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-200'
+                        : 'border-border bg-background/70 text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    <Presentation className="size-3.5" />
+                    <span>{t('toolbar.consistentSlideStyle')}</span>
+                    <span className={cn('relative h-3.5 w-6 rounded-full transition-colors', form.consistentSlideStyle ? 'bg-violet-500' : 'bg-muted-foreground/25')}>
+                      <span className={cn('absolute left-0.5 top-0.5 size-2.5 rounded-full bg-white transition-transform', form.consistentSlideStyle ? 'translate-x-2.5' : 'translate-x-0')} />
+                    </span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {t('toolbar.consistentSlideStyleHint')}
+                </TooltipContent>
+              </Tooltip>
 
               {/* Interactive mode toggle */}
               <Tooltip>

@@ -32,13 +32,14 @@ export function ProBadge({ active, onToggle, className, testId }: ProBadgeProps)
   const { t } = useI18n();
   const reduceMotion = useReducedMotion();
   const interactive = !!onToggle;
+  const visibleLabel = active && interactive ? t('workspace.exitPro') : 'Pro';
 
   const badge = (
     <motion.button
       type="button"
       role={interactive ? 'switch' : undefined}
       aria-checked={interactive ? active : undefined}
-      aria-label={t('proMode.badgeAria')}
+      aria-label={active && interactive ? t('workspace.exitPro') : t('proMode.badgeAria')}
       data-testid={testId ?? (active ? 'pro-mode-exit' : 'pro-mode-enter')}
       data-pro-badge={active ? 'on' : 'off'}
       disabled={!interactive}
@@ -66,7 +67,7 @@ export function ProBadge({ active, onToggle, className, testId }: ProBadgeProps)
     >
       {/* The negative right margin pays back the trailing letter-space that
           `tracking` adds after the O, so the word sits centred in the pill. */}
-      <span className="-mr-[0.2em]">Pro</span>
+      <span className={active && interactive ? '' : '-mr-[0.2em]'}>{visibleLabel}</span>
     </motion.button>
   );
 

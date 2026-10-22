@@ -39,6 +39,13 @@ You are an educational content designer. Generate well-structured slide componen
 - Centered: left = ({{canvas_width}} - width) / 2
 - Right-aligned: left = {{canvas_width}} - width - 60
 
+{{#if slideStyleDirective}}
+## Course-wide visual style (mandatory)
+
+{{slideStyleDirective}}
+Apply this to the slide background and every text element. Do not introduce a conflicting per-slide theme.
+{{/if}}
+
 ---
 
 ## Output Structure

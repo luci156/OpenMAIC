@@ -33,6 +33,7 @@ import { QuestionCard } from './question-card';
 import { SystemNode } from './system-node';
 import { isSameNotice, presentSystemNotice, repeatLabel, repeatTitle } from './system-notice';
 import { TextBlock } from './text-block';
+import { TranslationToggle } from '@/components/chat/translation-toggle';
 import { ThinkingBlock } from './thinking-block';
 import { ToolGroup } from './tool-group';
 import { UserBubble } from './user-bubble';
@@ -284,6 +285,9 @@ function ChatNodeView({
       return (
         <div className="text-[var(--wb-text)]">
           <TextBlock text={node.text} streaming={node.streaming} />
+          {!node.streaming && node.text.trim() ? (
+            <TranslationToggle text={node.text} className="mt-1" />
+          ) : null}
         </div>
       );
   }

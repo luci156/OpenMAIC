@@ -41,6 +41,7 @@ import { guardedServerRuntimeStore } from '@/lib/persistence/runtime-tombstone-g
 import { getServerPersistenceProvider } from '@/lib/persistence/server-provider';
 import { createWhiteboardRuntimeService } from '@/lib/whiteboard/runtime/store';
 import { hasNativeWhiteboardAction } from '@/lib/chat/pi/tools/native-whiteboard';
+import { getEnglishIeltsScopeRefusal } from '@/lib/prompts/english-ielts-scope';
 import {
   ELEMENT_REFERENCE_ACCEPTED_HEADER,
   ElementReferenceValidationError,
@@ -153,6 +154,60 @@ async function chat(req: NextRequest, principal: OwnerPrincipal): Promise<Respon
       );
     }
 
+    const agentConfigs = resolveAgentConfigs(body);
+    const resolvedAgentIds = new Set(agentConfigs.map((agent) => agent.id));
+    const unresolvedAgentIds = agentIds.filter((id) => !resolvedAgentIds.has(id));
+    if (unresolvedAgentIds.length > 0) {
+      return apiError(
+        'INVALID_REQUEST',
+        400,
+        `Unknown classroom agents in config.agentIds: ${unresolvedAgentIds.join(', ')}`,
+      );
+    }
+    if (agentConfigs.length === 0) {
+      return apiError(
+        'INVALID_REQUEST',
+        400,
+        `No valid classroom agents found for config.agentIds: ${body.config.agentIds.join(', ')}`,
+      );
+    }
+
+    const latestUserMessage = [...body.messages]
+      .reverse()
+      .find((message) => message.role === 'user');
+    const latestUserText =
+      latestUserMessage?.parts
+        ?.map((part) => (part.type === 'text' ? part.text : ''))
+        .filter(Boolean)
+        .join('\n') ?? '';
+    const scopeRefusal = getEnglishIeltsScopeRefusal(latestUserText);
+    if (scopeRefusal) {
+      const teacher = agentConfigs.find((agent) => agent.role === 'teacher') ?? agentConfigs[0];
+      const messageId = crypto.randomUUID();
+      const events = [
+        {
+          type: 'agent_start',
+          data: {
+            messageId,
+            agentId: teacher.id,
+            agentName: teacher.name,
+            agentAvatar: teacher.avatar,
+            agentColor: teacher.color,
+          },
+        },
+        { type: 'text_delta', data: { messageId, content: scopeRefusal } },
+        { type: 'agent_end', data: { messageId, agentId: teacher.id } },
+        { type: 'done', data: { totalActions: 0, totalAgents: 1, agentHadContent: true } },
+      ];
+      return new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''), {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        },
+      });
+    }
+
     const {
       model: languageModel,
       apiKey: resolvedApiKey,
@@ -177,24 +232,6 @@ async function chat(req: NextRequest, principal: OwnerPrincipal): Promise<Respon
 
     if (isProviderKeyRequired(providerId) && !resolvedApiKey) {
       return apiError('MISSING_API_KEY', 401, 'API Key is required');
-    }
-
-    const agentConfigs = resolveAgentConfigs(body);
-    const resolvedAgentIds = new Set(agentConfigs.map((agent) => agent.id));
-    const unresolvedAgentIds = agentIds.filter((id) => !resolvedAgentIds.has(id));
-    if (unresolvedAgentIds.length > 0) {
-      return apiError(
-        'INVALID_REQUEST',
-        400,
-        `Unknown classroom agents in config.agentIds: ${unresolvedAgentIds.join(', ')}`,
-      );
-    }
-    if (agentConfigs.length === 0) {
-      return apiError(
-        'INVALID_REQUEST',
-        400,
-        `No valid classroom agents found for config.agentIds: ${body.config.agentIds.join(', ')}`,
-      );
     }
 
     const signal = req.signal;

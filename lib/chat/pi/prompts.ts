@@ -7,6 +7,7 @@ import { buildVirtualWhiteboardContext } from '@/lib/orchestration/summarizers/w
 import { getActionDescriptions } from '@/lib/chat/pi/tool-schemas';
 import type { AgentTurnSummary, WhiteboardActionRecord } from '@/lib/orchestration/types';
 import type { StatelessChatRequest } from '@/lib/types/chat';
+import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
 
 function compactOutlineText(value: string, maxLength: number): string {
   const compact = value.replace(/\s+/g, ' ').trim();
@@ -95,6 +96,8 @@ export function buildDirectorPrompt(
   const triggerAgentId = body.config.triggerAgentId;
 
   return [
+    ENGLISH_IELTS_SCOPE_PROMPT,
+    '',
     'You are the director of an in-class multi-agent classroom.',
     'Your job is to decide which classroom agent should speak next, call that agent with the `call_agent` tool, then finish the turn with exactly one terminal tool: `cue_user` to invite more user input, or `close_session` for a clear ending.',
     'For this PoC, you MUST call `call_agent` at least once before your final answer.',
@@ -169,6 +172,8 @@ export function buildChildPrompt(
     : null;
 
   return [
+    ENGLISH_IELTS_SCOPE_PROMPT,
+    '',
     `You are ${agent.name}.`,
     '',
     agent.persona,
@@ -238,6 +243,8 @@ export function buildNativeChildPrompt(
       ]
     : [];
   return [
+    ENGLISH_IELTS_SCOPE_PROMPT,
+    '',
     `You are ${agent.name}.`,
     '',
     agent.persona,

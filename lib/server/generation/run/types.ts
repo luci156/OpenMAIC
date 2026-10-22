@@ -82,6 +82,8 @@ export interface GenerationRunInput {
   materialIds: string[];
   interactive: boolean;
   taskEngine: boolean;
+  /** Apply one consistent light visual theme to every generated slide. */
+  slideStyle?: 'consistent-light' | 'ai';
   agents: GenerationRunAgents;
   learnerProfile?: { nickname?: string; bio?: string };
   /**

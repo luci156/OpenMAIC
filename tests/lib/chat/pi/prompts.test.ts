@@ -329,6 +329,17 @@ describe('Pi director prompt closure routing', () => {
 });
 
 describe('Pi child prompt structured output', () => {
+  it('keeps classroom chat within English/IELTS and mirrors the learner language', () => {
+    const director = buildDirectorPrompt(makeBody(), agents, 4);
+    const child = buildChildPrompt(makeBody(), agents[0], [], [], []);
+
+    for (const prompt of [director, child]) {
+      expect(prompt).toContain('supports only English language learning and IELTS preparation');
+      expect(prompt).toContain('reply in the same language as the user’s latest message');
+      expect(prompt).toContain('do not answer that subject, create its course, or use tools');
+    }
+  });
+
   it('requires JSON array output and lists available actions without tool-call wording', () => {
     const prompt = buildChildPrompt(makeBody(), agents[0], [], [], ['spotlight', 'wb_open']);
 

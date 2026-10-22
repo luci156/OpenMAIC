@@ -17,6 +17,7 @@ import {
 } from '@/lib/persistence/owner-merges';
 import { decodeElementRefs } from '@/lib/workbench/element-refs';
 import { decodeCourseRefs } from '@/lib/workbench/course-refs';
+import { getEnglishIeltsScopeRefusal } from '@/lib/prompts/english-ielts-scope';
 import {
   bindOwnerMaterialsToSession,
   SessionMaterialBindingError,
@@ -93,6 +94,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         400,
         `text exceeds the ${MAX_SESSION_TEXT_LENGTH} character limit`,
       );
+      responseHeaders.forEach((value, name) => response.headers.append(name, value));
+      return response;
+    }
+    const scopeRefusal = getEnglishIeltsScopeRefusal(text);
+    if (scopeRefusal) {
+      const response = apiError('INVALID_REQUEST', 400, scopeRefusal);
       responseHeaders.forEach((value, name) => response.headers.append(name, value));
       return response;
     }

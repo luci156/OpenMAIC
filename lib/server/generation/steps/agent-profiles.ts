@@ -10,6 +10,7 @@ import { callLLM } from '@/lib/ai/llm';
 import { AGENT_COLOR_PALETTE } from '@/lib/constants/agent-defaults';
 import { normalizeVoiceDesign } from '@/lib/audio/voice-design';
 import { isQwenCloneVoice, resolveTTSModelForVoice } from '@/lib/audio/constants';
+import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
 
 import { StepRefusal, type StepContext, type StepLanguageModel } from './context';
 
@@ -169,7 +170,7 @@ export async function generateAgentProfiles(
     ? resolveNarratorVoice(narratorVoice, availableVoices)
     : undefined;
 
-  const systemPrompt = `You are an expert instructional designer. Generate agent profiles for a multi-agent classroom simulation. Decide the appropriate number of agents (typically 3-5) based on the course content and complexity. Return ONLY valid JSON, no markdown or explanation.`;
+  const systemPrompt = `${ENGLISH_IELTS_SCOPE_PROMPT}\n\nYou are an expert instructional designer. Generate agent profiles for an English-learning and IELTS classroom simulation. Decide the appropriate number of agents (typically 3-5) based on the course content and complexity. Return ONLY valid JSON, no markdown or explanation.`;
 
   // Build voice list for prompt (if available)
   const binaryGenderListed = availableVoices?.some(

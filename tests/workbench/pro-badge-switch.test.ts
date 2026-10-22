@@ -54,5 +54,6 @@ describe('Pro mode switch semantics', () => {
     expect(markup.match(/aria-checked="true"/g)).toHaveLength(2);
     expect(markup).toContain('data-testid="pro-mode-exit"');
     expect(markup).toContain('data-testid="pro-workspace-hero-badge"');
+    expect(markup).toContain('workspace.exitPro');
   });
 });

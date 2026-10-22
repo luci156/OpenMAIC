@@ -6,6 +6,7 @@
  * POST /api/generate/scene-actions.
  */
 import { prepareVisionImages } from '../vision-images';
+import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
 import { callLLM } from '@/lib/ai/llm';
 import {
   generateSceneActions as generateActions,
@@ -43,6 +44,7 @@ export interface SceneActionsInput {
   previousSpeeches?: string[];
   userProfile?: string;
   languageDirective?: string;
+  slideStyle?: 'consistent-light' | 'ai';
   /** The scene-actions stage's model. */
   model: StepLanguageModel;
 }
@@ -80,6 +82,7 @@ export async function generateSceneActions(
     userPrompt: string,
     images?: Array<{ id: string; src: string }>,
   ): Promise<string> => {
+    const scopedSystemPrompt = `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${systemPrompt}`;
     if (images?.length && hasVision) {
       const safeImages = await prepareVisionImages(images, log);
       const result = await callLLM(
@@ -87,7 +90,7 @@ export async function generateSceneActions(
           model: languageModel,
           // A run cancels the call when it loses its lease or its course.
           abortSignal: ctx.signal,
-          system: systemPrompt,
+          system: scopedSystemPrompt,
           messages: [
             {
               role: 'user' as const,
@@ -108,7 +111,7 @@ export async function generateSceneActions(
       {
         model: languageModel,
         abortSignal: ctx.signal,
-        system: systemPrompt,
+        system: scopedSystemPrompt,
         prompt: userPrompt,
         maxOutputTokens: modelInfo?.outputWindow,
         maxRetries: 0,
@@ -152,7 +155,9 @@ export async function generateSceneActions(
   log.info(`Generated ${actions.length} actions for: "${outline.title}"`);
 
   // ── Build complete scene ──
-  const scene = buildCompleteScene(outline, generationContent, actions, stageId);
+  const scene = buildCompleteScene(outline, generationContent, actions, stageId, {
+    slideStyle: input.slideStyle,
+  });
 
   if (!scene) {
     log.error(`Failed to build scene: "${outline.title}"`);

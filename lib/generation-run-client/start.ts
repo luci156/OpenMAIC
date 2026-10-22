@@ -70,6 +70,7 @@ export async function startClassicRun(input: {
   materialIds: readonly string[];
   interactive: boolean;
   taskEngine: boolean;
+  slideStyle?: StartRunInput['slideStyle'];
   capabilities: ModelCapabilities;
 }): Promise<RunSnapshot> {
   const agents = await selectedRunAgents();
@@ -91,6 +92,7 @@ export async function startClassicRun(input: {
     materialIds,
     interactive: input.interactive,
     taskEngine: input.taskEngine,
+    slideStyle: input.slideStyle ?? 'consistent-light',
     agents,
     ...(learnerProfile ? { learnerProfile } : {}),
     ...(voice ? { voice } : {}),

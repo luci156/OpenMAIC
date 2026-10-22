@@ -228,6 +228,7 @@ export function runRequirements(input: GenerationRunInput, webSearch: boolean): 
     ...(webSearch ? { webSearch: true } : {}),
     ...(input.interactive ? { interactiveMode: true } : {}),
     ...(input.taskEngine ? { taskEngineMode: true } : {}),
+    ...(input.slideStyle === 'consistent-light' ? { slideStyle: 'consistent-light' } : {}),
   };
 }
 
@@ -516,14 +517,17 @@ async function executeClaimedRun(
               ...materialImages(),
               agents: agents().agents.agents,
               languageDirective,
-              // The first scene is generated with the session's requirements;
-              // the classroom generates the rest with the task-engine flag only.
+              // The first scene uses the complete session requirements;
+              // later scenes retain the existing task-engine scope plus course style.
               requirements:
                 sceneIndex === 0
                   ? runRequirements(input, research?.webSearch === true)
-                  : taskEngineMode
-                    ? ({ taskEngineMode: true } as UserRequirements)
-                    : undefined,
+                  : {
+                      ...(taskEngineMode ? { taskEngineMode: true } : {}),
+                      ...(input.slideStyle === 'consistent-light'
+                        ? { slideStyle: 'consistent-light' as const }
+                        : {}),
+                    },
             },
             { log, signal: callSignal },
           ),
@@ -729,6 +733,7 @@ async function executeClaimedRun(
                   previousSpeeches: previousSpeechesFor(index),
                   ...(userProfile ? { userProfile } : {}),
                   languageDirective,
+                  slideStyle: input.slideStyle,
                 },
                 { log, signal: callSignal },
               );
