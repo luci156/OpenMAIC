@@ -30,6 +30,7 @@ interface LibraryRow extends Record<string, unknown> {
   description: string | null;
   interactive_mode: boolean | null;
   task_engine_mode: boolean | null;
+  ielts_band_range: string | null;
   created_at: number | string;
   updated_at: number | string;
   folder_id: string | null;
@@ -56,6 +57,7 @@ export async function summarizeLibraryStages(
             stages.description,
             stages.interactive_mode,
             stages.task_engine_mode,
+            stages.data->>'ieltsBandRange' AS ielts_band_range,
             stages.created_at,
             stages.updated_at,
             CASE WHEN meta.owner_id = $2 THEN stages.folder_id END AS folder_id,
@@ -78,6 +80,7 @@ export async function summarizeLibraryStages(
       ...(row.description === null ? {} : { description: row.description }),
       ...(row.interactive_mode === null ? {} : { interactiveMode: row.interactive_mode }),
       ...(row.task_engine_mode === null ? {} : { taskEngineMode: row.task_engine_mode }),
+      ...(row.ielts_band_range === null ? {} : { ieltsBandRange: row.ielts_band_range }),
       createdAt: Number(row.created_at),
       updatedAt: Number(row.updated_at),
       sceneCount: Number(row.scene_count),
