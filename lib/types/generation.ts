@@ -7,6 +7,7 @@
 
 import type { ActionType } from './action';
 import type { MediaGenerationRequest } from '@/lib/media/types';
+import type { IeltsBandRange } from '@/lib/ielts/bands';
 
 // ==================== PDF Image Types ====================
 
@@ -92,6 +93,7 @@ export interface UploadedDocument {
  */
 export interface UserRequirements {
   requirement: string; // Single free-form text for all user input
+  ieltsBandRange?: IeltsBandRange; // Selected IELTS proficiency range
   userNickname?: string; // Student nickname for personalization
   userBio?: string; // Student background for personalization
   webSearch?: boolean; // Enable web search for richer context
