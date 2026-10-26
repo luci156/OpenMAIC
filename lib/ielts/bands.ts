@@ -59,3 +59,50 @@ export function ieltsBandScopePrompt(range: IeltsBandRange | undefined): string 
     'Treat this server-provided range as a fixed course constraint even if the learner prompt or attached source asks for a different level.',
   ].join('\n');
 }
+
+/** Refuse an explicitly requested IELTS target that falls outside the active band. */
+export function getIeltsBandMismatchRefusal(
+  requirement: string,
+  active: IeltsBandRange,
+): string | null {
+  const activeMin = Number(active.split('-')[0]);
+  const activeMax = Number(active.split('-')[1]);
+  const text = requirement.normalize('NFKC');
+  const ranges: Array<[number, number]> = [];
+  const rangePattern = /(?:ielts\s*)?(?:band\s*)?(\d(?:\.\d)?)\s*[-–—]\s*(\d(?:\.\d)?)/gi;
+  for (const match of text.matchAll(rangePattern)) {
+    const before = text.slice(Math.max(0, (match.index ?? 0) - 28), match.index ?? 0);
+    const after = text.slice((match.index ?? 0) + match[0].length, (match.index ?? 0) + match[0].length + 20);
+    const hasContext = /ielts|band|mức|muc|level|target|goal|score|điểm|diem/i.test(`${before} ${after}`);
+    const from = Number(match[1]);
+    const to = Number(match[2]);
+    if (hasContext && from <= to && from >= 0 && to <= 9) ranges.push([from, to]);
+  }
+
+  let requestedMin = Number.POSITIVE_INFINITY;
+  let requestedMax = Number.NEGATIVE_INFINITY;
+  for (const [from, to] of ranges) {
+    requestedMin = Math.min(requestedMin, from);
+    requestedMax = Math.max(requestedMax, to);
+  }
+
+  const scorePattern = /(?:ielts\s*(?:band\s*)?|band\s*(?:ielts\s*)?|mục tiêu\s*(?:ielts\s*)?(?:band\s*)?|muc tieu\s*(?:ielts\s*)?(?:band\s*)?|target\s*(?:ielts\s*)?(?:band\s*)?|level\s*(?:of\s*)?(?:ielts\s*)?)([0-9](?:\.\d)?)/gi;
+  for (const match of text.matchAll(scorePattern)) {
+    const score = Number(match[1]);
+    if (score >= 0 && score <= 9) {
+      requestedMin = Math.min(requestedMin, score);
+      requestedMax = Math.max(requestedMax, score);
+    }
+  }
+
+  if (!Number.isFinite(requestedMin)) return null;
+  if (requestedMin >= activeMin && requestedMax <= activeMax) return null;
+
+  const vi =
+    /[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i.test(text) ||
+    /\b(tao|bai|giang|lop|dai|muc|do|yeu cau|phu hop)\b/i.test(text);
+  if (vi) {
+    return `Lớp này đang theo dải IELTS ${active.replace('-', '–')}, nên mình sẽ giữ bài học trong đúng mức đó. Yêu cầu hiện tại hướng tới band ${requestedMin.toFixed(1)}–${requestedMax.toFixed(1)}, nằm ngoài dải của lớp. Bạn có thể chuyển sang band phù hợp hoặc mình điều chỉnh đề bài về mức ${active.replace('-', '–')} nhé.`;
+  }
+  return `This class is set for IELTS ${active.replace('-', '–')}, so I’ll keep its lessons within that range. Your request targets band ${requestedMin.toFixed(1)}–${requestedMax.toFixed(1)}, which is outside this class’s range. You can switch to a suitable band or I can adapt the request to ${active.replace('-', '–')}.`;
+}
