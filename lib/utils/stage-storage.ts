@@ -9,6 +9,7 @@ import { Stage, Scene } from '../types/stage';
 import { ChatSession } from '../types/chat';
 import { db } from '@/lib/device-storage/database';
 import type { FolderRecord } from '@/lib/types/folder';
+import { isIeltsBandRange, type IeltsBandRange } from '@/lib/ielts/bands';
 import { FolderNameError } from './folder-name-validation';
 export { FolderNameError } from './folder-name-validation';
 import {
@@ -112,6 +113,7 @@ export interface StageListItem {
   updatedAt: number;
   interactiveMode?: boolean;
   taskEngineMode?: boolean;
+  ieltsBandRange?: IeltsBandRange;
   /** Folder this course belongs to; undefined = unfiled. Device-local only. */
   folderId?: string;
 }
@@ -748,6 +750,7 @@ export async function listStages(): Promise<StageListItem[]> {
           ...(item.description !== undefined ? { description: item.description } : {}),
           ...(item.interactiveMode !== undefined ? { interactiveMode: item.interactiveMode } : {}),
           ...(item.taskEngineMode !== undefined ? { taskEngineMode: item.taskEngineMode } : {}),
+          ...(isIeltsBandRange(item.ieltsBandRange) ? { ieltsBandRange: item.ieltsBandRange } : {}),
         };
         return item.folderId ? { ...base, folderId: item.folderId } : base;
       })
