@@ -15,7 +15,12 @@ function sameOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
   if (!origin) return true;
   try {
-    return new URL(origin).origin === new URL(request.url).origin;
+    const requestUrl = new URL(request.url);
+    const host = request.headers.get('host');
+    const forwardedProtocol = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+    const protocol = forwardedProtocol ? `${forwardedProtocol.replace(/:$/, '')}:` : requestUrl.protocol;
+    const requestOrigin = host ? new URL(`${protocol}//${host}`).origin : requestUrl.origin;
+    return new URL(origin).origin === requestOrigin;
   } catch {
     return false;
   }
