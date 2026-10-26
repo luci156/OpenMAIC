@@ -524,7 +524,8 @@ async function executeClaimedRun(
                 sceneIndex === 0
                   ? runRequirements(input, research?.webSearch === true)
                   : {
-                        ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
+                      requirement: input.requirement,
+                      ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
                       ...(taskEngineMode ? { taskEngineMode: true } : {}),
                       ...(input.slideStyle === 'consistent-light'
                         ? { slideStyle: 'consistent-light' as const }
@@ -973,6 +974,7 @@ async function executeClaimedRun(
       updatedAt: now,
       interactiveMode: input.interactive,
       taskEngineMode,
+      ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
       languageDirective,
       agentIds: result.agentIds,
       ...(result.generatedAgentConfigs
