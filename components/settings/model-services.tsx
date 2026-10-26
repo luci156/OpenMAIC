@@ -49,6 +49,7 @@ import { cn } from '@/lib/utils';
 import type { SettingsSection } from '@/lib/types/settings';
 
 import { AddProviderDialog } from './add-provider-dialog';
+import { AddCapabilityServiceDialog } from './add-capability-service-dialog';
 import { ASRSettings } from './asr-settings';
 import { ImageSettings } from './image-settings';
 import { PDFSettings } from './pdf-settings';
@@ -291,9 +292,7 @@ export function ModelServicesPanel({
             }))}
             selectedProviderId={entry?.id ?? ''}
             onSelect={select}
-            onAddProvider={
-              capability === 'chat' && canAdd ? () => setShowAddProvider(true) : undefined
-            }
+            onAddProvider={canAdd ? () => setShowAddProvider(true) : undefined}
           />
         </div>
 
@@ -315,7 +314,7 @@ export function ModelServicesPanel({
       </div>
 
       <AddProviderDialog
-        open={showAddProvider}
+        open={showAddProvider && capability === 'chat'}
         onOpenChange={setShowAddProvider}
         view={view}
         apply={apply}
@@ -324,6 +323,18 @@ export function ModelServicesPanel({
           select(id);
         }}
       />
+
+      {capability !== 'chat' && (
+        <AddCapabilityServiceDialog
+          open={showAddProvider}
+          onOpenChange={setShowAddProvider}
+          view={view}
+          apply={apply}
+          capability={capability}
+          serviceLabel={t(SERVICE_TAB_LABELS[tab])}
+          onAdded={select}
+        />
+      )}
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>

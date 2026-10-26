@@ -46,6 +46,34 @@ describe('serviceEntries', () => {
     ]);
   });
 
+  it('offers the shared Antigravity preset from the 9Router image service tab', () => {
+    const antigravity: PresetView = {
+      id: 'antigravity',
+      name: 'Antigravity (9Router)',
+      kind: 'single',
+      capabilities: {
+        chat: { registryId: 'openai', models: [] },
+        image: {
+          registryId: 'ninerouter-image',
+          models: [{ id: 'ag/gemini-3.1-flash-image', name: 'Gemini 3.1 Flash Image' }],
+        },
+      },
+      requiresBaseUrl: true,
+      customEndpoint: true,
+      recommended: {},
+    };
+    expect(
+      serviceEntries(makeView({ presets: [antigravity] }), 'image', ['ninerouter-image']),
+    ).toEqual([
+      {
+        id: 'antigravity',
+        registryId: 'ninerouter-image',
+        state: 'available',
+        preset: antigravity,
+      },
+    ]);
+  });
+
   it('counts a key the server can no longer read as not configured', () => {
     const view = makeView({
       providers: [{ ...workspaceProvider('acme'), key: { set: true, unreadable: true } }],

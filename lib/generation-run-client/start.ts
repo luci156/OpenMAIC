@@ -66,6 +66,7 @@ export function selectedRunVoice(capabilities: ModelCapabilities): StartRunInput
 
 export async function startClassicRun(input: {
   requirement: string;
+  ieltsBandRange?: import('@/lib/ielts/bands').IeltsBandRange;
   /** The composer's ready materials (uploaded and extracted), in bundle order. */
   materialIds: readonly string[];
   interactive: boolean;
@@ -89,6 +90,7 @@ export async function startClassicRun(input: {
 
   return startGenerationRun({
     requirement: input.requirement,
+    ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
     materialIds,
     interactive: input.interactive,
     taskEngine: input.taskEngine,

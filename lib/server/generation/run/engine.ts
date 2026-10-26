@@ -223,6 +223,7 @@ export function learnerProfileText(input: GenerationRunInput): string | undefine
 export function runRequirements(input: GenerationRunInput, webSearch: boolean): UserRequirements {
   return {
     requirement: input.requirement,
+    ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
     ...(input.learnerProfile?.nickname ? { userNickname: input.learnerProfile.nickname } : {}),
     ...(input.learnerProfile?.bio ? { userBio: input.learnerProfile.bio } : {}),
     ...(webSearch ? { webSearch: true } : {}),
@@ -523,6 +524,7 @@ async function executeClaimedRun(
                 sceneIndex === 0
                   ? runRequirements(input, research?.webSearch === true)
                   : {
+                        ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
                       ...(taskEngineMode ? { taskEngineMode: true } : {}),
                       ...(input.slideStyle === 'consistent-light'
                         ? { slideStyle: 'consistent-light' as const }
@@ -734,6 +736,7 @@ async function executeClaimedRun(
                   ...(userProfile ? { userProfile } : {}),
                   languageDirective,
                   slideStyle: input.slideStyle,
+                  ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
                 },
                 { log, signal: callSignal },
               );

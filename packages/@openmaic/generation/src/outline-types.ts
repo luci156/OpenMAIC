@@ -23,6 +23,8 @@ export type ImageMapping = Record<string, string>;
 /** Free-form requirements accepted by outline generation. */
 export interface UserRequirements {
   requirement: string;
+  /** Server-selected IELTS proficiency range for the complete course. */
+  ieltsBandRange?: '3.0-5.5' | '5.5-7.0' | '7.0-9.0';
   userNickname?: string;
   userBio?: string;
   webSearch?: boolean;

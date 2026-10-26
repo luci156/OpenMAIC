@@ -149,6 +149,8 @@ export const providerSchema = z
     apiKey: z.string().min(1).optional(),
     baseUrl: z.url().optional(),
     models: z.array(z.string().trim().min(1)).min(1).optional(),
+    /** Image model IDs for the 9Router-compatible image capability. */
+    imageModels: z.array(z.string().trim().min(1)).min(1).optional(),
     /** HTTP proxy for this provider's requests. */
     proxy: z.url().optional(),
     /** Multi-part credentials for vendors that do not use a single key. */

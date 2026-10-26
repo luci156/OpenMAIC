@@ -7,6 +7,7 @@ import type { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  generateImage: vi.fn(),
   testImageConnectivity: vi.fn(),
   callLLM: vi.fn(),
   fetchModels: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock('@/lib/server/model-config/runtime', async (importOriginal) => ({
 }));
 vi.mock('@/lib/media/image-providers', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/media/image-providers')>()),
+  generateImage: mocks.generateImage,
   testImageConnectivity: mocks.testImageConnectivity,
 }));
 vi.mock('@/lib/ai/llm', () => ({ callLLM: mocks.callLLM }));
@@ -60,6 +62,7 @@ beforeEach(() => {
   vi.stubEnv('DATABASE_URL', 'postgres://test');
   workspaces.clear();
   mocks.testImageConnectivity.mockReset();
+  mocks.generateImage.mockReset();
   mocks.callLLM.mockReset();
   mocks.fetchModels.mockReset();
   runtime.setDeploymentConfigForTests({
@@ -159,6 +162,65 @@ describe('saved provider requests', () => {
     expect(mocks.testImageConnectivity).toHaveBeenCalledWith(
       expect.objectContaining({ providerId: 'seedream', apiKey: 'sk-image' }),
     );
+  });
+
+  it('generates exactly one explicitly requested 9Router test image with the saved model and discards it', async () => {
+    vi.stubEnv('ALLOW_LOCAL_NETWORKS', '1');
+    workspaces.set('user:alice', {
+      providers: {
+        router: {
+          preset: 'antigravity',
+          apiKey: 'sk-router-image',
+          baseUrl: 'http://localhost:20128/v1',
+          imageModels: ['ag/gemini-3.1-flash-image', 'custom/image-model'],
+        },
+      },
+    });
+    mocks.generateImage.mockResolvedValue({ url: 'data:image/png;base64,AA==' });
+    const { POST } = await import('@/app/api/verify-image-provider/route');
+    const response = await POST(request({ provider: 'router', model: 'custom/image-model' }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      success: true,
+      message: 'Generated one test image and discarded it.',
+    });
+    expect(mocks.generateImage).toHaveBeenCalledTimes(1);
+    expect(mocks.generateImage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerId: 'ninerouter-image',
+        apiKey: 'sk-router-image',
+        baseUrl: 'http://localhost:20128/v1',
+        model: 'custom/image-model',
+        fetchImpl: expect.any(Function),
+      }),
+      expect.objectContaining({ width: 512, height: 512 }),
+    );
+    expect(mocks.testImageConnectivity).not.toHaveBeenCalled();
+  });
+
+  it('reports a safe actionable authentication error without echoing the upstream body', async () => {
+    vi.stubEnv('ALLOW_LOCAL_NETWORKS', '1');
+    workspaces.set('user:alice', {
+      providers: {
+        router: {
+          preset: 'antigravity',
+          apiKey: 'sk-router-image',
+          baseUrl: 'http://localhost:20128/v1',
+        },
+      },
+    });
+    mocks.generateImage.mockRejectedValue(
+      new Error('9Router image generation failed (401): upstream-secret-detail'),
+    );
+    const { POST } = await import('@/app/api/verify-image-provider/route');
+    const response = await POST(request({ provider: 'router' }));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.error).toMatch(/authentication failed.*API key/i);
+    expect(JSON.stringify(body)).not.toContain('upstream-secret-detail');
+    expect(mocks.generateImage).toHaveBeenCalledTimes(1);
   });
 
   it('answers 400 for an image provider the workspace does not have', async () => {

@@ -181,6 +181,22 @@ export function tokenPlanToPreset(plan: TokenPlanPreset): ProviderPreset {
 // These accounts share one key and base URL across capability registries.
 const SHARED_ACCOUNT_PRESETS: ProviderPreset[] = [
   {
+    id: 'antigravity',
+    name: 'Antigravity (9Router)',
+    kind: 'single',
+    // 9Router exposes Antigravity models through its OpenAI-compatible API.
+    capabilities: {
+      chat: { registryId: 'openai' },
+      image: {
+        registryId: 'ninerouter-image',
+        models: ['ag/gemini-3.1-flash-image'],
+        defaultModel: 'ag/gemini-3.1-flash-image',
+      },
+    },
+    requiresBaseUrl: true,
+    trustsModelCatalogue: false,
+  },
+  {
     id: 'deepseek',
     name: 'DeepSeek',
     kind: 'single',

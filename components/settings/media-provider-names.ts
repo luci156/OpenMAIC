@@ -17,6 +17,7 @@ export const IMAGE_PROVIDER_NAMES: Record<ImageProviderId, string> = {
   'comfyui-image': 'providerComfyUIImage',
   'openrouter-image': 'providerOpenRouterImage',
   lemonade: 'providerLemonadeImage',
+  'ninerouter-image': 'providerNineRouterImage',
 };
 
 export const VIDEO_PROVIDER_NAMES: Record<VideoProviderId, string> = {

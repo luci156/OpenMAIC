@@ -24,16 +24,16 @@ Connecting Kimi Coding Plan in **Settings → Token Plan** recommends chat, web 
 
 The first-run wizard leaves web fetch on the builtin reader; only connecting the plan through the Token Plan settings page applies its fetch recommendation.
 
-`openai-compatible` connects any OpenAI-compatible chat server: it needs a `baseUrl`, and its `models` list is what the model settings offer.
+`openai-compatible` connects any OpenAI-compatible chat server: it needs a `baseUrl`, and its `models` list is what the model settings offer. `antigravity` is the shared Antigravity (9Router) account for chat and image generation; its image model list is configured separately with `imageModels`.
 
 All preset IDs:
 
 | Capability | Presets |
 | --- | --- |
-| Chat | `openai`, `azure`, `atlascloud`, `anthropic`, `bedrock`, `google`, `glm`, `qwen`, `deepseek`, `kimi`, `siliconflow`, `doubao`, `openrouter`, `grok`, `tencent-hunyuan`, `xiaomi`, `ollama`, `lemonade`, `openai-compatible`, and the token plans |
+| Chat | `openai`, `azure`, `atlascloud`, `anthropic`, `bedrock`, `google`, `glm`, `qwen`, `deepseek`, `kimi`, `siliconflow`, `doubao`, `openrouter`, `grok`, `tencent-hunyuan`, `xiaomi`, `ollama`, `lemonade`, `openai-compatible`, `antigravity`, and the token plans |
 | TTS | `openai-tts`, `azure-tts`, `glm-tts`, `qwen-tts`, `minimax-tts`, `voxcpm-tts`, `doubao-tts`, `elevenlabs-tts`, `google-tts`, `browser-native-tts`, `lemonade-tts` |
 | ASR | `openai-whisper`, `qwen-asr`, `azure-asr`, `browser-native`, `funasr-asr`, `lemonade-asr` |
-| Image | `seedream`, `openai-image`, `qwen-image`, `nano-banana`, `minimax-image`, `grok-image`, `comfyui-image`, `lemonade-image`, `openrouter-image` |
+| Image | `seedream`, `openai-image`, `qwen-image`, `nano-banana`, `minimax-image`, `grok-image`, `comfyui-image`, `lemonade-image`, `openrouter-image`, `antigravity` |
 | Video | `seedance`, `kling`, `minimax-video`, `grok-video`, `happyhorse`, `openrouter-video` |
 | Web search | `tavily`, `exa`, `firecrawl`, `bocha`, `brave`, `baidu`, `claude`, `minimax-search`, `doubao-search`, `deepseek`, `kimi`, `kimi-coding-plan`, `searxng` |
 | Web fetch | `builtin`, `deepseek`, `firecrawl`, `kimi`, `kimi-coding-plan` |
@@ -82,6 +82,9 @@ In `openmaic.yml` a chat slot names `<provider id>:<model id>`, where the provid
 | ComfyUI Image        | `comfyui-image` | No preset model ID; discovers and selects ComfyUI workflows from `public/` at runtime. |
 | Lemonade Image       | `lemonade`      | Qwen Image GGUF (`Qwen-Image-GGUF`)<br />Stable Diffusion (sd-cpp) (`sd-cpp`)                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | OpenRouter Image | `openrouter-image` | Gemini 3 Pro Image (`google/gemini-3-pro-image`)<br />GPT Image 2 (`openai/gpt-image-2`)<br />Seedream 5.0 Pro (`bytedance-seed/seedream-5-0-pro`) |
+| Antigravity (9Router) | `antigravity` | Gemini 3.1 Flash Image (`ag/gemini-3.1-flash-image`); edit additional IDs in **Settings → Image** (`imageModels` in `openmaic.yml`). Uses the same Base URL and API key as Antigravity chat. For a local 9Router endpoint, set `ALLOW_LOCAL_NETWORKS=true` on the OpenMAIC server. |
+
+9Router image requests use the OpenAI Images route `/images/generations`; enter the API root with or without `/v1` (for example, `http://localhost:20128/v1`). A local Base URL is resolved from the OpenMAIC server process, so `localhost` must be the server host/container. **Test connection** asks before generating one billable 512×512 image and discards that image; it does not retry.
 
 ## Video generation models
 

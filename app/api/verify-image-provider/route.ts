@@ -1,7 +1,8 @@
 /**
  * Verify Image Provider API
  *
- * Lightweight endpoint that validates provider credentials without generating images.
+ * Verifies image-provider connectivity. The saved 9Router settings action is
+ * explicitly confirmed in the UI and generates one image that it discards.
  *
  * POST /api/verify-image-provider
  *
@@ -16,7 +17,7 @@
 import { modelAuthorizationResponse } from '@/lib/server/api-response';
 
 import { NextRequest } from 'next/server';
-import { IMAGE_PROVIDERS, testImageConnectivity } from '@/lib/media/image-providers';
+import { generateImage, IMAGE_PROVIDERS, testImageConnectivity } from '@/lib/media/image-providers';
 import {
   isServerConfiguredProvider,
   isServerProviderDisabled,
@@ -40,6 +41,30 @@ import { REQUEST_PROVIDERS_REFUSED } from '@/lib/server/resolve-model';
 
 const log = createLogger('VerifyImageProvider');
 
+function nineRouterVerificationError(error: unknown): string {
+  const message = error instanceof Error ? error.message : '';
+  const status = /9Router image generation failed \((\d{3})\)/.exec(message)?.[1];
+  if (status === '401' || status === '403') {
+    return '9Router image authentication failed; check the saved API key.';
+  }
+  if (status === '404') {
+    return '9Router could not find the image endpoint or model; check the Base URL and model ID.';
+  }
+  if (status === '429') {
+    return '9Router rate limit reached; wait before trying another image test.';
+  }
+  if (status)
+    return `9Router image generation failed with HTTP ${status}; check model availability.`;
+  if (/redirects are not allowed/i.test(message))
+    return '9Router redirected the image request; redirects are blocked for safety.';
+  if (/allow_local_networks|local\/private network/i.test(message)) {
+    return 'The local 9Router endpoint is blocked; enable ALLOW_LOCAL_NETWORKS on the OpenMAIC server.';
+  }
+  if (/base url is required|invalid image response|empty image response/i.test(message))
+    return message;
+  return '9Router image verification failed; check the Base URL, model ID, and server logs.';
+}
+
 export async function POST(request: NextRequest) {
   try {
     // The settings test a saved provider by its id (JSON body `provider`, with
@@ -60,12 +85,25 @@ export async function POST(request: NextRequest) {
       }
       const providerId = connection.providerId as ImageProviderId;
       const model = connection.modelId ?? IMAGE_PROVIDERS[providerId]?.models?.[0]?.id;
-      const result = await testImageConnectivity(
-        withMediaProviderFetch(
-          { providerId, apiKey: connection.apiKey ?? '', baseUrl: connection.baseUrl, model },
-          connection.managed,
-        ),
+      const config = withMediaProviderFetch(
+        { providerId, apiKey: connection.apiKey ?? '', baseUrl: connection.baseUrl, model },
+        connection.managed,
       );
+      if (providerId === 'ninerouter-image') {
+        // The settings UI makes the possible charge explicit before invoking
+        // this route. Keep this to one generation and intentionally discard it.
+        try {
+          await generateImage(config, {
+            prompt: 'Create a simple abstract test image with a blue circle on a white background.',
+            width: 512,
+            height: 512,
+          });
+        } catch (error) {
+          return apiError('UPSTREAM_ERROR', 500, nineRouterVerificationError(error));
+        }
+        return apiSuccess({ message: 'Generated one test image and discarded it.' });
+      }
+      const result = await testImageConnectivity(config);
       if (!result.success) return apiError('UPSTREAM_ERROR', 500, result.message);
       return apiSuccess({ message: result.message });
     }

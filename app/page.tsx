@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowUp,
+  ArrowLeft,
   Check,
   ChevronDown,
   ChevronRight,
@@ -16,10 +17,6 @@ import {
   Pencil,
   Trash2,
   Search,
-  Settings,
-  Sun,
-  Moon,
-  Monitor,
   ChevronUp,
   Upload,
   Sparkles,
@@ -29,16 +26,17 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { createLogger } from '@/lib/logger';
+import { getEnglishIeltsScopeRefusal } from '@/lib/prompts/english-ielts-scope';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupInput, InputGroupButton } from '@/components/ui/input-group';
 import { Textarea as UITextarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { SettingsDialog } from '@/components/settings';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
 import { AgentBar } from '@/components/agent/agent-bar';
-import { useTheme } from '@/lib/hooks/use-theme';
+import { requestAppSettings } from '@/components/app-chrome';
+import { isIeltsBandRange, type IeltsBandRange } from '@/lib/ielts/bands';
+import { ieltsAppCopy } from '@/lib/i18n/ielts-app-copy';
 import {
   courseGenerationUsable,
   requireModelCapabilities,
@@ -142,9 +140,14 @@ const initialFormState: FormState = {
 };
 
 function HomePage() {
-  const { t } = useI18n();
-  const { theme, setTheme } = useTheme();
+  const { t, locale } = useI18n();
   const router = useRouter();
+  const [ieltsBandRange, setIeltsBandRange] = useState<IeltsBandRange | null>(null);
+  useEffect(() => {
+    const band = new URLSearchParams(window.location.search).get('band');
+    if (isIeltsBandRange(band)) setIeltsBandRange(band);
+    else router.replace('/bands');
+  }, [router]);
   // Do not replay the classic hero's entrance after the route handoff already
   // carried the lockup and composer into place. The entrance is CSS, not a
   // JS-driven animation, so the server-rendered hero is painted (and fades in)
@@ -188,10 +191,6 @@ function HomePage() {
     if (workbenchEntryEnabled) router.prefetch('/workspace');
   }, [router, workbenchEntryEnabled]);
   const [form, setForm] = useState<FormState>(initialFormState);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSection, setSettingsSection] = useState<
-    import('@/lib/types/settings').SettingsSection | undefined
-  >(undefined);
 
   // Generation needs the course slots it resolves (outline, content, actions)
   // to name a model, whether or not the llm root does (the server's view;
@@ -225,8 +224,8 @@ function HomePage() {
     }
   }, []);
 
-  const [themeOpen, setThemeOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scopeReply, setScopeReply] = useState<string | null>(null);
   // True while the Generate click starts the run. Doubles as the guard flag
   // that freezes the course material set for the duration of the start and as
   // the switch that disables the toolbar's add/remove/Retry affordances, so
@@ -257,20 +256,7 @@ function HomePage() {
   const [createAndMoveTarget, setCreateAndMoveTarget] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
-  const toolbarRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    if (!themeOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (toolbarRef.current && !toolbarRef.current.contains(e.target as Node)) {
-        setThemeOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [themeOpen]);
 
   const loadClassrooms = async () => {
     try {
@@ -533,6 +519,7 @@ function HomePage() {
 
   const updateForm = <K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (field === 'requirement') setScopeReply(null);
     try {
       if (field === 'interactiveMode')
         localStorage.setItem(INTERACTIVE_MODE_STORAGE_KEY, String(value));
@@ -564,12 +551,22 @@ function HomePage() {
     // provider always has a concrete model. State A (no usable provider)
     // surfaces through the toolbar's single Configure-Provider affordance.
     if (preparingGenerate) return;
+    if (!ieltsBandRange) {
+      router.replace('/bands');
+      return;
+    }
     if (!form.requirement.trim()) {
       setError(t('upload.requirementRequired'));
       return;
     }
 
     setError(null);
+    setScopeReply(null);
+    const scopeRefusal = getEnglishIeltsScopeRefusal(form.requirement);
+    if (scopeRefusal) {
+      setScopeReply(scopeRefusal);
+      return;
+    }
 
     // The set is frozen while the run starts (`preparingGenerate` makes add,
     // remove and Retry inert), from the ready materials in their order.
@@ -588,6 +585,7 @@ function HomePage() {
       }
       const run = await startClassicRun({
         requirement: form.requirement,
+        ieltsBandRange,
         materialIds,
         interactive: form.vocationalTestMode ? true : form.interactiveMode,
         taskEngine: form.vocationalTestMode,
@@ -605,7 +603,9 @@ function HomePage() {
       if (err instanceof RunStartRefusedError) {
         setError(t(err.reason, err.values));
       } else if (err instanceof RunApiError) {
-        setError(runApiErrorText(err, t));
+        const refusal = getEnglishIeltsScopeRefusal(form.requirement);
+        if (refusal && err.serverMessage === refusal) setScopeReply(refusal);
+        else setError(runApiErrorText(err, t));
       } else {
         setError(err instanceof Error ? err.message : t('upload.generateFailed'));
       }
@@ -629,7 +629,8 @@ function HomePage() {
   };
 
   // Generate waits for every attached material to be uploaded and extracted.
-  const canGenerate = !!form.requirement.trim() && hasUsableProvider && courseMaterials.allReady;
+  const canGenerate =
+    !!ieltsBandRange && !!form.requirement.trim() && hasUsableProvider && courseMaterials.allReady;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -656,97 +657,6 @@ function HomePage() {
           className="hidden"
         />
       )}
-      {/* ═══ Top-right pill (unchanged) ═══ */}
-      <div
-        ref={toolbarRef}
-        className="fixed top-4 right-4 z-50 flex items-center gap-1 bg-white/60 dark:bg-gray-800/60 backdrop-blur-md px-2 py-1.5 rounded-full border border-gray-100/50 dark:border-gray-700/50 shadow-sm"
-      >
-        {/* Language Selector */}
-        <LanguageSwitcher onOpen={() => setThemeOpen(false)} />
-
-        <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
-
-        {/* Theme Selector */}
-        <div className="relative">
-          <button
-            onClick={() => {
-              setThemeOpen(!themeOpen);
-            }}
-            className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all"
-          >
-            {theme === 'light' && <Sun className="w-4 h-4" />}
-            {theme === 'dark' && <Moon className="w-4 h-4" />}
-            {theme === 'system' && <Monitor className="w-4 h-4" />}
-          </button>
-          {themeOpen && (
-            <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden z-50 min-w-[140px]">
-              <button
-                onClick={() => {
-                  setTheme('light');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'light' &&
-                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-                )}
-              >
-                <Sun className="w-4 h-4" />
-                {t('settings.themeOptions.light')}
-              </button>
-              <button
-                onClick={() => {
-                  setTheme('dark');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'dark' &&
-                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-                )}
-              >
-                <Moon className="w-4 h-4" />
-                {t('settings.themeOptions.dark')}
-              </button>
-              <button
-                onClick={() => {
-                  setTheme('system');
-                  setThemeOpen(false);
-                }}
-                className={cn(
-                  'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                  theme === 'system' &&
-                    'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-                )}
-              >
-                <Monitor className="w-4 h-4" />
-                {t('settings.themeOptions.system')}
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
-
-        {/* Settings Button */}
-        <div className="relative">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all group"
-          >
-            <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
-          </button>
-        </div>
-      </div>
-      <SettingsDialog
-        open={settingsOpen}
-        onOpenChange={(open) => {
-          setSettingsOpen(open);
-          if (!open) setSettingsSection(undefined);
-        }}
-        initialSection={settingsSection}
-      />
-
       {/* ═══ Background Decor ═══ */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
@@ -796,6 +706,20 @@ function HomePage() {
           {t('home.slogan')}
         </p>
 
+        {ieltsBandRange && (
+          <div className="-mt-3 mb-6 flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-100">
+            <span className="font-semibold">{ieltsAppCopy(locale, 'selectedBand')}: {ieltsBandRange}</span>
+            <span className="hidden text-violet-200/70 sm:inline">· {ieltsAppCopy(locale, 'bandConstraint')}</span>
+            <button
+              type="button"
+              onClick={() => router.push('/bands')}
+              className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium text-violet-200 transition hover:bg-white/10 hover:text-white"
+            >
+              <ArrowLeft className="size-3" />{ieltsAppCopy(locale, 'backToBands')}
+            </button>
+          </div>
+        )}
+
         {/* ── Unified input area ── */}
         <div className={cn('w-full', heroEnter('fade-in zoom-in-97 duration-300 delay-350'))}>
           <div
@@ -833,10 +757,7 @@ function HomePage() {
                   }}
                   onPdfError={setError}
                   materialsLocked={preparingGenerate}
-                  onSettingsOpen={(section) => {
-                    setSettingsSection(section);
-                    setSettingsOpen(true);
-                  }}
+                  onSettingsOpen={(section) => requestAppSettings(section)}
                 />
               </div>
 
@@ -962,6 +883,21 @@ function HomePage() {
             </Tooltip>
           </motion.div>
         )}
+
+        {/* ── Natural scope reply ── */}
+        <AnimatePresence>
+          {scopeReply && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              role="status"
+              className="mt-3 w-full rounded-xl border border-border/40 bg-background/60 px-4 py-3 text-sm leading-relaxed text-foreground/90"
+            >
+              {scopeReply}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Error ── */}
         <AnimatePresence>

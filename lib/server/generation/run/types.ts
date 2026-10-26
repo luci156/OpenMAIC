@@ -13,6 +13,7 @@ import type { AgentInfo } from '@openmaic/generation';
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
 import type { SceneOutline } from '@/lib/types/generation';
 import type { GeneratedAgentConfig } from '@/lib/types/stage';
+import type { IeltsBandRange } from '@/lib/ielts/bands';
 
 /**
  * `preparing` (material analysis, research) → `outlining` →
@@ -78,6 +79,8 @@ export type GenerationRunAgents =
  */
 export interface GenerationRunInput {
   requirement: string;
+  /** The UI's selected band, validated again by the API before a run starts. */
+  ieltsBandRange?: IeltsBandRange;
   /** Owner-library uploads (`POST /api/materials`), in order. */
   materialIds: string[];
   interactive: boolean;

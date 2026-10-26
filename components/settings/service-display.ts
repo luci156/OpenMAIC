@@ -33,6 +33,7 @@ const IMAGE_PROVIDER_ICONS: Record<string, string> = {
   'comfyui-image': '/logos/comfyui.svg',
   'openrouter-image': '/logos/openrouter.svg',
   lemonade: '/logos/lemonade.svg',
+  'ninerouter-image': '/logos/gemini.svg',
 };
 
 const VIDEO_PROVIDER_ICONS: Record<string, string> = {

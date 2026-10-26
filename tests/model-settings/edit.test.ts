@@ -192,6 +192,7 @@ describe('providers', () => {
       baseUrl: true,
       baseUrlRequired: false,
       models: false,
+      imageModels: false,
       chatOnlyEndpoint: false,
     });
     expect(
@@ -201,6 +202,7 @@ describe('providers', () => {
       baseUrl: true,
       baseUrlRequired: true,
       models: true,
+      imageModels: false,
       chatOnlyEndpoint: false,
     });
     expect(draftProblem(compatiblePreset, emptyDraft(compatiblePreset.id))).toBe('baseUrl');
@@ -264,11 +266,42 @@ describe('providers', () => {
     });
   });
 
+  it('edits 9Router image models separately from the chat model list', () => {
+    const preset = {
+      ...compatiblePreset,
+      id: 'antigravity',
+      name: 'Antigravity (9Router)',
+      capabilities: {
+        chat: { models: [] },
+        image: {
+          models: [{ id: 'ag/gemini-3.1-flash-image', name: 'Gemini 3.1 Flash Image' }],
+          registryId: 'ninerouter-image',
+        },
+      },
+    };
+    const draft = {
+      ...emptyDraft('antigravity'),
+      baseUrl: 'http://localhost:20128/v1',
+      models: 'ag/gemini-3.1-pro',
+      imageModels: 'ag/gemini-3.1-flash-image, custom/image-model',
+    };
+    expect(providerFields(preset, draft).imageModels).toBe(true);
+    expect(providerChange('antigravity', draft, preset)).toMatchObject({
+      models: ['ag/gemini-3.1-pro'],
+      imageModels: ['ag/gemini-3.1-flash-image', 'custom/image-model'],
+    });
+  });
+
   it('moves an edit onto a changed provider, keeping only what the user changed', () => {
     const basis = { ...draftFor(workspaceProvider('acme')), baseUrl: 'https://a', models: 'm1' };
     const fresh = { ...basis, baseUrl: 'https://b', models: 'm2' };
     const keyOnly = { ...basis, keyAction: 'replace' as const, apiKey: 'sk-new' };
-    expect(draftEdits(keyOnly, basis)).toEqual({ key: true, baseUrl: false, models: false });
+    expect(draftEdits(keyOnly, basis)).toEqual({
+      key: true,
+      baseUrl: false,
+      models: false,
+      imageModels: false,
+    });
     expect(rebaseDraft(keyOnly, basis, fresh)).toEqual({
       ...fresh,
       keyAction: 'replace',

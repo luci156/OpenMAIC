@@ -79,6 +79,7 @@ export type ImageProviderId =
   | 'glm-image'
   | 'comfyui-image'
   | 'openrouter-image'
+  | 'ninerouter-image'
   | 'lemonade';
 // Add new image providers below (uncomment and modify):
 // | 'dall-e'

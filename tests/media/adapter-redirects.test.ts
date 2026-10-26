@@ -13,6 +13,7 @@ import { generateWithMiniMaxImage } from '@/lib/media/adapters/minimax-image-ada
 import { generateWithMiniMaxVideo } from '@/lib/media/adapters/minimax-video-adapter';
 import { generateWithNanoBanana } from '@/lib/media/adapters/nano-banana-adapter';
 import { generateWithOpenAIImage } from '@/lib/media/adapters/openai-image-adapter';
+import { generateWithNineRouterImage } from '@/lib/media/adapters/9router-image-adapter';
 import { generateWithQwenImage } from '@/lib/media/adapters/qwen-image-adapter';
 import { generateWithSeedance } from '@/lib/media/adapters/seedance-adapter';
 import { generateWithSeedream } from '@/lib/media/adapters/seedream-adapter';
@@ -70,6 +71,10 @@ const cases: RedirectCase[] = [
   {
     name: 'OpenAI image generation',
     run: () => generateWithOpenAIImage(imageConfig('openai-image'), imageOptions),
+  },
+  {
+    name: '9Router image generation',
+    run: () => generateWithNineRouterImage(imageConfig('ninerouter-image'), imageOptions),
   },
   {
     name: 'Qwen image generation',

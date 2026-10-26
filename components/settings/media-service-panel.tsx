@@ -1,8 +1,19 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Loader2, CheckCircle2, XCircle, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import type { CatalogueModel } from '@/lib/config/provider-presets';
@@ -42,6 +53,7 @@ export function MediaServicePanel({
   kind,
   defaultBaseUrl,
   catalogue,
+  verifyModelId,
   children,
 }: ServicePanelProps & {
   kind: 'image' | 'video';
@@ -49,18 +61,64 @@ export function MediaServicePanel({
   defaultBaseUrl?: string;
   /** The registry's models, for a service no provider of which is saved yet. */
   catalogue: readonly CatalogueModel[];
+  /** The image model currently assigned to the workspace slot. */
+  verifyModelId?: string;
   /** What replaces the model list (ComfyUI's workflows). */
   children?: ReactNode;
 }) {
   const { t } = useI18n();
   const provider = entry.provider;
   const editable = entry.state === 'workspace' || entry.state === 'available';
-  const [testLoading, setTestLoading] = useState(false);
-  const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [testMessage, setTestMessage] = useState('');
-
   const models =
     provider?.capabilities[kind]?.models ?? entry.preset?.capabilities[kind]?.models ?? catalogue;
+  const [testLoading, setTestLoading] = useState(false);
+  const testInFlight = useRef(false);
+  const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [testMessage, setTestMessage] = useState('');
+  const [confirmPaidTest, setConfirmPaidTest] = useState(false);
+  const canEditNineRouter = entry.preset?.id === 'antigravity';
+  const [baseUrl, setBaseUrl] = useState(provider?.baseUrl ?? defaultBaseUrl ?? '');
+  const [imageModelsText, setImageModelsText] = useState(
+    (provider?.imageModels ?? models.map((model) => model.id)).join(', '),
+  );
+
+  useEffect(() => {
+    setBaseUrl(provider?.baseUrl ?? defaultBaseUrl ?? '');
+    setImageModelsText((provider?.imageModels ?? models.map((model) => model.id)).join(', '));
+  }, [provider?.id, provider?.baseUrl, provider?.imageModels, defaultBaseUrl, models]);
+
+  const saveBaseUrl = () => {
+    const next = baseUrl.trim();
+    if (canEditNineRouter && next !== (provider?.baseUrl ?? defaultBaseUrl ?? '')) {
+      void saveServiceProvider(view, apply, entry, { baseUrl: next || null }, t);
+    }
+  };
+
+  const saveImageModels = () => {
+    if (!canEditNineRouter) return;
+    const imageModels = [
+      ...new Set(
+        imageModelsText
+          .split(/[\n,]/)
+          .map((id) => id.trim())
+          .filter(Boolean),
+      ),
+    ];
+    const current = provider?.imageModels ?? models.map((model) => model.id);
+    if (JSON.stringify(imageModels) !== JSON.stringify(current)) {
+      void saveServiceProvider(
+        view,
+        apply,
+        entry,
+        {
+          imageModels: imageModels.length ? imageModels : null,
+          ...(!provider && baseUrl.trim() ? { baseUrl: baseUrl.trim() } : {}),
+        },
+        t,
+      );
+    }
+  };
+
   const success = t(
     kind === 'image' ? 'settings.imageConnectivitySuccess' : 'settings.videoConnectivitySuccess',
   );
@@ -69,11 +127,13 @@ export function MediaServicePanel({
   );
 
   const handleTest = async () => {
+    if (testInFlight.current) return;
+    testInFlight.current = true;
     setTestLoading(true);
     setTestStatus('idle');
     setTestMessage('');
     try {
-      const data = await verifySavedMedia(kind, entry.id);
+      const data = await verifySavedMedia(kind, entry.id, verifyModelId ?? models[0]?.id);
       if (data.success) {
         setTestStatus('success');
         setTestMessage(success);
@@ -85,8 +145,17 @@ export function MediaServicePanel({
       setTestStatus('error');
       setTestMessage(`${failed}: ${err}`);
     } finally {
+      testInFlight.current = false;
       setTestLoading(false);
     }
+  };
+
+  const startTest = () => {
+    if (kind === 'image' && canEditNineRouter) {
+      setConfirmPaidTest(true);
+      return;
+    }
+    void handleTest();
   };
 
   return (
@@ -108,7 +177,7 @@ export function MediaServicePanel({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => void handleTest()}
+                onClick={startTest}
                 disabled={testLoading || !provider}
                 className="gap-1.5"
               >
@@ -149,7 +218,19 @@ export function MediaServicePanel({
                 {t('settings.requestUrl')}: {defaultBaseUrl}
               </p>
             )}
-            <EndpointServerOnlyHint />
+            {canEditNineRouter && editable ? (
+              <Input
+                aria-label="Base URL"
+                type="url"
+                value={baseUrl}
+                onChange={(event) => setBaseUrl(event.target.value)}
+                onBlur={saveBaseUrl}
+                placeholder="http://localhost:20128/v1"
+                className="font-mono text-sm"
+              />
+            ) : (
+              <EndpointServerOnlyHint />
+            )}
           </div>
         </>
       )}
@@ -157,6 +238,22 @@ export function MediaServicePanel({
       {children ?? (
         <div className="space-y-3">
           <Label className="text-base">{t('settings.models')}</Label>
+          {canEditNineRouter && editable && (
+            <div className="space-y-1.5">
+              <Input
+                aria-label="Image model IDs"
+                value={imageModelsText}
+                onChange={(event) => setImageModelsText(event.target.value)}
+                onBlur={saveImageModels}
+                placeholder="ag/gemini-3.1-flash-image"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Edit the 9Router image model IDs, separated by commas or new lines. The list is
+                separate from chat models.
+              </p>
+            </div>
+          )}
           <div className="space-y-1.5">
             {models.map((model) => (
               <div
@@ -171,6 +268,32 @@ export function MediaServicePanel({
             ))}
           </div>
         </div>
+      )}
+
+      {kind === 'image' && canEditNineRouter && (
+        <AlertDialog open={confirmPaidTest} onOpenChange={setConfirmPaidTest}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('settings.ninerouterPaidTestTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('settings.ninerouterPaidTestDescription')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={testLoading}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={testLoading}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setConfirmPaidTest(false);
+                  void handleTest();
+                }}
+              >
+                {t('settings.ninerouterPaidTestAction')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

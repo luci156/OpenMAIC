@@ -7,6 +7,7 @@
  */
 import { prepareVisionImages } from '../vision-images';
 import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
+import { ieltsBandScopePrompt, type IeltsBandRange } from '@/lib/ielts/bands';
 import { callLLM } from '@/lib/ai/llm';
 import {
   generateSceneActions as generateActions,
@@ -45,6 +46,7 @@ export interface SceneActionsInput {
   userProfile?: string;
   languageDirective?: string;
   slideStyle?: 'consistent-light' | 'ai';
+  ieltsBandRange?: IeltsBandRange;
   /** The scene-actions stage's model. */
   model: StepLanguageModel;
 }
@@ -82,7 +84,7 @@ export async function generateSceneActions(
     userPrompt: string,
     images?: Array<{ id: string; src: string }>,
   ): Promise<string> => {
-    const scopedSystemPrompt = `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${systemPrompt}`;
+    const scopedSystemPrompt = `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${ieltsBandScopePrompt(input.ieltsBandRange)}\n\n${systemPrompt}`;
     if (images?.length && hasVision) {
       const safeImages = await prepareVisionImages(images, log);
       const result = await callLLM(

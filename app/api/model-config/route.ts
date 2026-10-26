@@ -72,6 +72,7 @@ const bodySchema = z
           apiKey: z.string().optional(),
           baseUrl: z.string().min(1).nullable().optional(),
           models: z.array(z.string().min(1)).nullable().optional(),
+          imageModels: z.array(z.string().min(1)).nullable().optional(),
         })
         .strict(),
       z.object({ kind: z.literal('remove-provider'), id }).strict(),

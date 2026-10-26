@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isAgentRuntimeConfigured, isProWorkbenchEnabled } from '@/lib/config/feature-flags';
 import { verifyAccessTokenEdge } from '@/lib/server/access-token-edge';
 import {
+  localLoginEnabled,
+  LOCAL_LOGIN_COOKIE,
+  verifyLocalLoginToken,
+} from '@/lib/server/local-login';
+import {
   anonymousOwnerForNavigation,
   type NavigationIdentity,
 } from '@/lib/server/identity/navigation';
@@ -38,11 +43,53 @@ export async function middleware(request: NextRequest) {
 
   // One anonymous owner per browser, established on the page response before
   // any API request can mint its own.
-  const identity = anonymousOwnerForNavigation({
+  const loginEnabled = localLoginEnabled();
+  const localSessionValid = loginEnabled
+    ? await verifyLocalLoginToken(request.cookies.get(LOCAL_LOGIN_COOKIE)?.value)
+    : false;
+
+  // Local account login is the outer gate for this single-teacher installation.
+  // The login APIs remain reachable so the session can be established or cleared.
+  if (loginEnabled) {
+    const publicAuthPath =
+      pathname === '/login' ||
+      pathname === '/api/auth/login' ||
+      pathname === '/api/auth/logout' ||
+      pathname === '/api/auth/session' ||
+      pathname === '/api/access-code/status' ||
+      pathname === '/api/health';
+
+    if (pathname === '/login' && localSessionValid) {
+      return NextResponse.redirect(new URL('/bands', request.url));
+    }
+    if (!localSessionValid && !publicAuthPath) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { success: false, errorCode: 'UNAUTHENTICATED', error: 'Login required' },
+          { status: 401 },
+        );
+      }
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(loginUrl);
+    }
+    if (localSessionValid && pathname === '/') {
+      const band = request.nextUrl.searchParams.get('band');
+      if (!['3.0-5.5', '5.5-7.0', '7.0-9.0'].includes(band ?? '')) {
+        return NextResponse.redirect(new URL('/bands', request.url));
+      }
+    }
+  }
+
+  const identity = loginEnabled
+    ? undefined
+    : anonymousOwnerForNavigation({
     method: request.method,
     headers: request.headers,
     pathname,
   });
+
+  if (loginEnabled && localSessionValid) return next(request, identity);
 
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {

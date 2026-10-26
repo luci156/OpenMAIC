@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import type { ModelConfigFile } from '@/lib/server/model-config/openmaic-yml';
 import {
   assertDeploymentModelAuthorized,
+  deploymentAuthorizedModels,
   ModelAuthorizationError,
 } from '@/lib/server/model-config/model-authorization';
 
@@ -105,6 +106,28 @@ afterEach(() => {
 });
 
 describe('operator model authorization', () => {
+  it('authorizes 9Router image IDs separately from chat models', () => {
+    const routerConfig: ModelConfigFile = {
+      providers: {
+        antigravity: {
+          preset: 'antigravity',
+          apiKey: 'server-secret',
+          models: ['ag/gemini-3.1-pro'],
+          imageModels: ['ag/gemini-3.1-flash-image', 'custom/image-model'],
+        },
+      },
+      slots: { image: 'antigravity:slot/image-model' },
+    };
+    expect(deploymentAuthorizedModels(routerConfig, 'antigravity', 'image')).toEqual([
+      'ag/gemini-3.1-flash-image',
+      'custom/image-model',
+      'slot/image-model',
+    ]);
+    expect(deploymentAuthorizedModels(routerConfig, 'antigravity', 'chat')).toEqual([
+      'ag/gemini-3.1-pro',
+    ]);
+  });
+
   it('allows only explicitly configured models, including primary and fallback', () => {
     for (const id of ['allowed', 'primary', 'backup'])
       expect(() => assertDeploymentModelAuthorized(config, 'openai', id)).not.toThrow();

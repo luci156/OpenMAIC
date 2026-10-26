@@ -7,6 +7,7 @@
  */
 import { prepareVisionImages } from '../vision-images';
 import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
+import { ieltsBandScopePrompt } from '@/lib/ielts/bands';
 import { callLLM } from '@/lib/ai/llm';
 import {
   applyOutlineFallbacks,
@@ -102,7 +103,7 @@ export async function generateSceneContent(
     userPrompt: string,
     images?: Array<{ id: string; src: string }>,
   ): Promise<string> => {
-    const scopedSystemPrompt = `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${systemPrompt}`;
+    const scopedSystemPrompt = `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${ieltsBandScopePrompt(requirements?.ieltsBandRange)}\n\n${systemPrompt}`;
     if (images?.length && hasVision) {
       const resolvedImages = await ctx.resolveVisionImages(images);
       const result = await callLLM(

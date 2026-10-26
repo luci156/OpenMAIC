@@ -329,6 +329,7 @@ export interface ProviderFields {
   apiKey?: string;
   baseUrl?: string | null;
   models?: string[] | null;
+  imageModels?: string[] | null;
 }
 
 /**

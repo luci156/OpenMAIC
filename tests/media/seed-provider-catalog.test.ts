@@ -12,6 +12,15 @@ describe('Seed media provider catalog', () => {
     );
   });
 
+  it('offers the default Antigravity model through 9Router Image', () => {
+    expect(IMAGE_PROVIDERS['ninerouter-image']).toMatchObject({
+      id: 'ninerouter-image',
+      name: '9Router Image',
+      defaultBaseUrl: 'http://localhost:20128/v1',
+      models: [{ id: 'ag/gemini-3.1-flash-image' }],
+    });
+  });
+
   it('includes official Seedance 2.0 video generation models', () => {
     const modelIds = VIDEO_PROVIDERS.seedance.models.map((model) => model.id);
 

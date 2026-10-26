@@ -35,6 +35,7 @@ import {
   testOpenRouterImageConnectivity,
   OPENROUTER_DEFAULT_BASE_URL,
 } from './adapters/openrouter-image-adapter';
+import { generateWithNineRouterImage } from './adapters/9router-image-adapter';
 
 export const IMAGE_PROVIDERS: Record<ImageProviderId, ImageProviderConfig> = {
   seedream: {
@@ -173,6 +174,16 @@ export const IMAGE_PROVIDERS: Record<ImageProviderId, ImageProviderConfig> = {
     ],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
   },
+  'ninerouter-image': {
+    id: 'ninerouter-image',
+    name: '9Router Image',
+    requiresApiKey: false,
+    defaultBaseUrl: 'http://localhost:20128/v1',
+    models: [
+      { id: 'ag/gemini-3.1-flash-image', name: 'Gemini 3.1 Flash Image (Antigravity)' },
+    ],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
+  },
 };
 
 export async function testImageConnectivity(
@@ -199,6 +210,11 @@ export async function testImageConnectivity(
       return testLemonadeImageConnectivity(config);
     case 'openrouter-image':
       return testOpenRouterImageConnectivity(config);
+    case 'ninerouter-image':
+      return {
+        success: false,
+        message: 'Use the explicit image generation check for 9Router Image',
+      };
     default:
       return {
         success: false,
@@ -232,6 +248,8 @@ export async function generateImage(
       return generateWithLemonadeImage(config, options);
     case 'openrouter-image':
       return generateWithOpenRouterImage(config, options);
+    case 'ninerouter-image':
+      return generateWithNineRouterImage(config, options);
     default:
       throw new Error(`Unsupported image provider: ${config.providerId}`);
   }

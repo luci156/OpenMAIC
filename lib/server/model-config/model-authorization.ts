@@ -74,7 +74,12 @@ export function deploymentAuthorizedModels(
   const providers = config?.providers;
   if (!providers || !Object.hasOwn(providers, providerId)) return [];
   const provider = providers[providerId];
-  const models = new Set(provider.models ?? []);
+  const isNineRouterImage =
+    capability === 'image' &&
+    getProviderPreset(provider.preset)?.capabilities.image?.registryId === 'ninerouter-image';
+  const models = new Set(
+    isNineRouterImage ? (provider.imageModels ?? []) : (provider.models ?? []),
+  );
   const prefix = `${providerId}:`;
   const addReference = (reference: string | undefined) => {
     if (reference?.startsWith(prefix)) models.add(reference.slice(prefix.length));

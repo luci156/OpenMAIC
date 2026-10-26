@@ -307,6 +307,20 @@ async function validateBootConfiguration(): Promise<void> {
   //
   // A registration that throws stops the process too, reported as a startup
   // failure with its stack (it is host code, not a setting).
+  const { localLoginEnabled } = await import('@/lib/server/local-login');
+  if (localLoginEnabled()) {
+    const { configureOwnerAuthentication, sharedTeamAuthMethod, singleUserAuthMethod } =
+      await import('@/lib/server/identity');
+    const { resolveSharedOwnerId } = await import('@/lib/server/identity/shared-team');
+    const { resolveSingleUserOwnerId } = await import('@/lib/server/identity/single-user');
+    const methods = [
+      (await import('@/lib/server/identity/host/local-login')).localLoginAuthMethod,
+    ];
+    if (resolveSharedOwnerId()) methods.push(sharedTeamAuthMethod());
+    else if (resolveSingleUserOwnerId()) methods.push(singleUserAuthMethod());
+    configureOwnerAuthentication({ methods, anonymousFallback: false });
+  }
+
   const { validateOwnerIdentityConfiguration } = await import('@/lib/server/identity/registry');
   runConfigurationCheck(validateOwnerIdentityConfiguration);
 

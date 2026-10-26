@@ -127,13 +127,14 @@ export function isLocalEndpoint(url: string): boolean {
   );
 }
 
-/** Only registry-approved tool endpoints may receive a workspace's key. */
+/** Only approved tool endpoints and the 9Router image endpoint may receive a workspace's key. */
 export function acceptsWorkspaceToolBaseUrl(
   capability: SlotCapability,
   registryId: string,
   baseUrl?: string,
 ): boolean {
   if (!baseUrl) return false;
+  if (capability === 'image' && registryId === 'ninerouter-image') return true;
   if (capability === 'webFetch') {
     return !!getWebFetchProvider(registryId)?.acceptsWorkspaceBaseUrl?.(baseUrl);
   }
@@ -177,7 +178,11 @@ async function fromTarget(
     // A self-hosted preset's default endpoint is on the server's own network.
     const endpoint =
       target.baseUrl ?? registryDefaultBaseUrl(getSlot(slot).capability, target.registryId);
-    if (endpoint && isLocalEndpoint(endpoint)) {
+    if (
+      endpoint &&
+      isLocalEndpoint(endpoint) &&
+      !(getSlot(slot).capability === 'image' && target.registryId === 'ninerouter-image')
+    ) {
       throw new WorkspaceEndpointError(
         `The ${target.presetId} preset runs on the server's own network; only the deployment (openmaic.yml) can configure it`,
       );

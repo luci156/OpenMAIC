@@ -15,6 +15,7 @@ import { reportApply } from './server-settings';
 /** The API dialects a custom endpoint can speak, and the preset each one is. */
 const API_MODE_PRESETS = {
   openai: 'openai-compatible',
+  antigravity: 'antigravity',
   anthropic: 'anthropic',
   google: 'google',
 } as const;
@@ -115,11 +116,17 @@ export function AddProviderDialog({
           {/* API Mode */}
           <div className="space-y-2">
             <Label>{t('settings.providerApiMode')}</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {(Object.keys(API_MODE_PRESETS) as ApiMode[]).map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => setType(mode)}
+                  onClick={() => {
+                    setType(mode);
+                    if (mode === 'antigravity') {
+                      setName((current) => current || 'Antigravity');
+                      setBaseUrl((current) => current || 'http://localhost:20128/v1');
+                    }
+                  }}
                   className={cn(
                     'p-2 rounded-lg border text-left text-sm transition-colors',
                     type === mode
@@ -127,13 +134,15 @@ export function AddProviderDialog({
                       : 'hover:bg-muted/50 border-transparent',
                   )}
                 >
-                  {t(
-                    mode === 'openai'
-                      ? 'settings.apiModeOpenAI'
-                      : mode === 'anthropic'
-                        ? 'settings.apiModeAnthropic'
-                        : 'settings.apiModeGoogle',
-                  )}
+                  {mode === 'antigravity'
+                    ? 'Antigravity · 9Router'
+                    : t(
+                        mode === 'openai'
+                          ? 'settings.apiModeOpenAI'
+                          : mode === 'anthropic'
+                            ? 'settings.apiModeAnthropic'
+                            : 'settings.apiModeGoogle',
+                      )}
                 </button>
               ))}
             </div>

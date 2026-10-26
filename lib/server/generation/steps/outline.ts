@@ -19,6 +19,7 @@ import {
 } from '@/lib/server/llm-fallback';
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompts';
 import { ENGLISH_IELTS_SCOPE_PROMPT } from '@/lib/prompts/english-ielts-scope';
+import { ieltsBandScopePrompt } from '@/lib/ielts/bands';
 import {
   formatImageDescription,
   formatImagePlaceholder,
@@ -514,7 +515,7 @@ async function prepareOutline(
 
   prompts = {
     ...prompts,
-    system: `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${prompts.system}`,
+    system: `${ENGLISH_IELTS_SCOPE_PROMPT}\n\n${ieltsBandScopePrompt(requirements.ieltsBandRange)}\n\n${prompts.system}`,
   };
 
   ctx.log.info(

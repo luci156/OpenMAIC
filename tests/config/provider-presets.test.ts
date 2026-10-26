@@ -63,6 +63,23 @@ describe('provider presets', () => {
     expect(getProviderPreset('doubao')?.capabilities).toEqual({ chat: { registryId: 'doubao' } });
   });
 
+  it('routes Antigravity through its OpenAI-compatible 9Router endpoint', () => {
+    expect(getProviderPreset('antigravity')).toMatchObject({
+      name: 'Antigravity (9Router)',
+      kind: 'single',
+      capabilities: {
+        chat: { registryId: 'openai' },
+        image: {
+          registryId: 'ninerouter-image',
+          models: ['ag/gemini-3.1-flash-image'],
+          defaultModel: 'ag/gemini-3.1-flash-image',
+        },
+      },
+      requiresBaseUrl: true,
+      trustsModelCatalogue: false,
+    });
+  });
+
   it('turns every token plan into a multi-capability preset', () => {
     expect(PROVIDER_PRESETS.filter((preset) => preset.kind === 'token-plan')).toHaveLength(
       TOKEN_PLAN_PRESETS.length,

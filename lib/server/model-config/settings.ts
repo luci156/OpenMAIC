@@ -89,6 +89,7 @@ export interface ProviderView {
   source: 'deployment' | 'workspace';
   baseUrl?: string;
   models?: string[];
+  imageModels?: string[];
   /** Non-secret adapter options, also available when previewing an inactive provider. */
   options?: Record<string, string | number | boolean>;
   voices?: ConfiguredTTSVoice[];
@@ -220,6 +221,7 @@ export type ModelSettingsChange =
       apiKey?: string;
       baseUrl?: string | null;
       models?: string[] | null;
+      imageModels?: string[] | null;
     }
   | { kind: 'remove-provider'; id: string };
 
@@ -272,8 +274,8 @@ function maskKey(key: string): string {
 
 /**
  * What a provider can be assigned to, with its models: a workspace provider
- * with its own endpoint serves chat only (see media.ts), except official web search
- * and web fetch endpoints accepted by the registries. A preset whose
+ * with its own endpoint serves chat only (see media.ts), except approved tool
+ * endpoints and the 9Router image endpoint. A preset whose
  * registry catalogue says nothing about the endpoint (an OpenAI-compatible
  * server) offers only the models the provider lists.
  */
@@ -286,12 +288,14 @@ function capabilityModels(
     strictModels = false,
     deployment,
     providerId,
+    imageModels,
   }: {
     chatOnly?: boolean;
     baseUrl?: string;
     strictModels?: boolean;
     deployment?: ModelConfigFile;
     providerId?: string;
+    imageModels?: string[];
   } = {},
 ): CapabilityModels {
   const result: CapabilityModels = {};
@@ -306,20 +310,29 @@ function capabilityModels(
     // A provider the operator switched off for this capability is not offered.
     const registryId = preset.capabilities[capability]?.registryId;
     if (registryId && isForceDisabled(capability, registryId)) continue;
-    const offered = preset.trustsModelCatalogue === false ? [] : presetModels(preset, capability);
+    const offered =
+      preset.trustsModelCatalogue === false && capability !== 'image'
+        ? []
+        : presetModels(preset, capability);
     // A provider's own model list narrows (or names) the chat models it serves.
     const authorized =
       strictModels && providerId
         ? deploymentAuthorizedModels(deployment, providerId, capability)
         : pinned;
     const models =
-      (capability === 'chat' && pinned?.length) || strictModels
-        ? (authorized ?? []).map(
+      capability === 'image' && imageModels?.length
+        ? imageModels.map(
             (id) =>
               offered.find((model) => model.id === id) ??
               catalogueModel(capability, registryId!, id),
           )
-        : offered;
+        : (capability === 'chat' && pinned?.length) || strictModels
+          ? (authorized ?? []).map(
+              (id) =>
+                offered.find((model) => model.id === id) ??
+                catalogueModel(capability, registryId!, id),
+            )
+          : offered;
     result[capability] = { models, ...(registryId ? { registryId } : {}) };
   }
   return result;
@@ -377,7 +390,15 @@ function workspacePresetProblem(preset: ProviderPreset): string | undefined {
   ][]) {
     if (capability === 'chat') continue;
     const endpoint = target.baseUrl ?? registryDefaultBaseUrl(capability, target.registryId);
-    if (endpoint && isLocalEndpoint(endpoint)) {
+    if (
+      endpoint &&
+      isLocalEndpoint(endpoint) &&
+      !(
+        preset.id === 'antigravity' &&
+        capability === 'image' &&
+        target.registryId === 'ninerouter-image'
+      )
+    ) {
       return `The ${preset.name} preset runs on the server's own network; only the deployment (openmaic.yml) can configure it`;
     }
   }
@@ -491,12 +512,14 @@ export function modelSettingsView(stored: StoredWorkspaceConfig | null): ModelSe
       ...presetLabel(provider.preset),
       source: 'deployment' as const,
       ...(provider.models ? { models: [...provider.models] } : {}),
+      ...(provider.imageModels ? { imageModels: [...provider.imageModels] } : {}),
       ...(provider.options ? { options: { ...provider.options } } : {}),
       ...(provider.voices ? { voices: provider.voices.map((voice) => ({ ...voice })) } : {}),
       capabilities: capabilityModels(getProviderPreset(provider.preset), provider.models, {
         strictModels: usesServerCredentials(provider),
         deployment: deployment?.config,
         providerId: id,
+        imageModels: provider.imageModels,
       }),
     })),
     ...Object.entries(workspaceProviders).map(([id, provider]) => ({
@@ -506,12 +529,14 @@ export function modelSettingsView(stored: StoredWorkspaceConfig | null): ModelSe
       source: 'workspace' as const,
       ...(provider.baseUrl ? { baseUrl: viewEndpoint(provider.baseUrl) } : {}),
       ...(provider.models ? { models: [...provider.models] } : {}),
+      ...(provider.imageModels ? { imageModels: [...provider.imageModels] } : {}),
       ...(provider.options ? { options: { ...provider.options } } : {}),
       ...(provider.voices ? { voices: provider.voices.map((voice) => ({ ...voice })) } : {}),
       capabilities: capabilityModels(getProviderPreset(provider.preset), provider.models, {
         // An official regional endpoint is the service's own, not a custom one.
         chatOnly: provider.baseUrl !== undefined && !officialEndpointOf(provider),
         baseUrl: provider.baseUrl,
+        imageModels: provider.imageModels,
       }),
       key: {
         set: Boolean(provider.apiKey) || unreadable.has(id),
@@ -598,9 +623,9 @@ async function checkProvider(id: string, provider: Provider): Promise<void> {
       'A proxy can only be configured by the deployment (openmaic.yml)',
     );
   }
-  // Only chat goes through the pinned, redirect-refusing transport: media,
-  // search and document services are reached at a preset's own endpoints
-  // (lib/server/model-config/media.ts refuses anything else at run time). A
+  // Only chat and the approved 9Router image endpoint use pinned,
+  // redirect-refusing transports. Other media, search and document services
+  // use preset endpoints (media.ts refuses other custom endpoints). A
   // regional service's own endpoint names its region on the official host.
   const regional = presetRegionalEndpointTemplate(preset);
   if (provider.baseUrl && !preset.capabilities.chat) {
@@ -759,12 +784,24 @@ export async function applyModelSettingsChange(
       (typedBaseUrl && officialEndpointOf({ preset: change.preset, baseUrl: typedBaseUrl })) ||
       typedBaseUrl;
     const models = change.models === undefined ? existing?.models : (change.models ?? undefined);
+    const imageModels =
+      change.imageModels === undefined ? existing?.imageModels : (change.imageModels ?? undefined);
     const provider: Provider = {
       preset: change.preset,
       ...(apiKey ? { apiKey } : {}),
       ...(baseUrl ? { baseUrl } : {}),
       ...(models?.length ? { models } : {}),
+      ...(imageModels?.length ? { imageModels } : {}),
     };
+    if (
+      provider.imageModels &&
+      getProviderPreset(provider.preset)?.capabilities.image?.registryId !== 'ninerouter-image'
+    ) {
+      throw new ModelSettingsError(
+        'INVALID_PROVIDER',
+        'Image model IDs are only supported by 9Router Image',
+      );
+    }
     await checkProvider(change.id, provider);
     providers[change.id] = provider;
     // Removing the key leaves the provider unable to serve what needs one:
@@ -897,6 +934,7 @@ const importedProviderSchema = z
     apiKey: z.string().min(1).optional(),
     baseUrl: z.string().min(1).optional(),
     models: z.array(z.string().min(1)).min(1).optional(),
+    imageModels: z.array(z.string().min(1)).min(1).optional(),
   })
   .strict();
 
@@ -927,7 +965,8 @@ function storesProposedProvider(
     sameKey &&
     stored.preset === proposed.preset &&
     stored.baseUrl === baseUrl &&
-    models(stored.models) === models(proposed.models)
+    models(stored.models) === models(proposed.models) &&
+    models(stored.imageModels) === models(proposed.imageModels)
   );
 }
 

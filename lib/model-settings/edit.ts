@@ -239,10 +239,12 @@ export interface ProviderDraft {
   baseUrl: string;
   /** Model ids, separated by commas or new lines. */
   models: string;
+  /** Image model ids, kept separate from the chat model catalogue. */
+  imageModels: string;
 }
 
 export function emptyDraft(preset: string): ProviderDraft {
-  return { preset, keyAction: 'replace', apiKey: '', baseUrl: '', models: '' };
+  return { preset, keyAction: 'replace', apiKey: '', baseUrl: '', models: '', imageModels: '' };
 }
 
 export function draftFor(provider: ProviderView): ProviderDraft {
@@ -253,6 +255,7 @@ export function draftFor(provider: ProviderView): ProviderDraft {
     apiKey: '',
     baseUrl: provider.baseUrl ?? '',
     models: (provider.models ?? []).join(', '),
+    imageModels: (provider.imageModels ?? []).join(', '),
   };
 }
 
@@ -277,7 +280,13 @@ export function providerFields(
   existing?: ProviderView,
 ) {
   if (!preset) {
-    return { baseUrl: false, baseUrlRequired: false, models: false, chatOnlyEndpoint: false };
+    return {
+      baseUrl: false,
+      baseUrlRequired: false,
+      models: false,
+      imageModels: false,
+      chatOnlyEndpoint: false,
+    };
   }
   const chat = preset.capabilities.chat;
   const baseUrl = preset.requiresBaseUrl || preset.customEndpoint;
@@ -293,6 +302,9 @@ export function providerFields(
         chat.models.length === 0 ||
         ownEndpoint ||
         !!existing?.models?.length),
+    imageModels:
+      preset.id === 'antigravity' &&
+      (!!preset.capabilities.image || !!existing?.imageModels?.length),
     // With its own endpoint a workspace provider serves chat only (a
     // regional service's official endpoint is its own, not a custom one).
     chatOnlyEndpoint:
@@ -326,6 +338,8 @@ export function draftEdits(draft: ProviderDraft, basis: ProviderDraft) {
     key: draft.keyAction !== basis.keyAction || draft.apiKey.trim() !== '',
     baseUrl: draft.baseUrl.trim() !== basis.baseUrl.trim(),
     models: parseModelList(draft.models).join('\n') !== parseModelList(basis.models).join('\n'),
+    imageModels:
+      parseModelList(draft.imageModels).join('\n') !== parseModelList(basis.imageModels).join('\n'),
   };
 }
 
@@ -345,6 +359,7 @@ export function rebaseDraft(
     apiKey: edits.key ? draft.apiKey : '',
     baseUrl: edits.baseUrl ? draft.baseUrl : fresh.baseUrl,
     models: edits.models ? draft.models : fresh.models,
+    imageModels: edits.imageModels ? draft.imageModels : fresh.imageModels,
   };
 }
 
@@ -367,6 +382,7 @@ export function providerChange(
   const fields = providerFields(preset, draft, existing);
   const baseUrl = fields.baseUrl ? draft.baseUrl.trim() : '';
   const models = fields.models ? parseModelList(draft.models) : [];
+  const imageModels = fields.imageModels ? parseModelList(draft.imageModels) : [];
   const apiKey = draft.apiKey.trim();
   const change: Extract<ModelSettingsChange, { kind: 'provider' }> = {
     kind: 'provider',
@@ -379,10 +395,13 @@ export function providerChange(
     const edits = basis ? draftEdits(draft, basis) : undefined;
     if (fields.baseUrl && (!edits || edits.baseUrl)) change.baseUrl = baseUrl || null;
     if (fields.models && (!edits || edits.models)) change.models = models.length ? models : null;
+    if (fields.imageModels && (!edits || edits.imageModels))
+      change.imageModels = imageModels.length ? imageModels : null;
   } else {
     if (apiKey) change.apiKey = apiKey;
     if (baseUrl) change.baseUrl = baseUrl;
     if (models.length) change.models = models;
+    if (imageModels.length) change.imageModels = imageModels;
   }
   return change;
 }

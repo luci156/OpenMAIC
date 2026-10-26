@@ -8,12 +8,13 @@ import type { SlotCapability } from '@/lib/config/model-slots';
 
 /**
  * Preset ids for registry entries whose own id is taken: web search entries
- * that share an id with a chat provider, and image entries that share an id
- * with a token plan offering a different endpoint.
+ * that share an id with a chat provider, image entries that share an id with
+ * a token plan offering a different endpoint, or capabilities of a shared
+ * account preset.
  */
 export const PRESET_ID_OVERRIDES: Partial<Record<SlotCapability, Record<string, string>>> = {
   webSearch: { minimax: 'minimax-search', doubao: 'doubao-search' },
-  image: { lemonade: 'lemonade-image' },
+  image: { lemonade: 'lemonade-image', 'ninerouter-image': 'antigravity' },
 };
 
 /**

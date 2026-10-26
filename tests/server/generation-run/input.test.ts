@@ -22,7 +22,7 @@ describe('run input', () => {
     const parsed = parseRunInput({ requirement: 'Cho tôi một bài học giải tích' });
     expect(parsed).toEqual({
       ok: false,
-      message: expect.stringMatching(/chỉ hỗ trợ học tiếng Anh/i),
+      message: expect.stringMatching(/xin lỗi.*tiếng Anh/i),
     });
   });
 

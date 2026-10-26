@@ -168,6 +168,56 @@ describe('/api/model-config', () => {
     expect(resolved).toMatchObject({ providerId: 'openai', modelId: 'gpt-5.6', apiKey: SECRET });
   });
 
+  it('persists 9Router image model IDs through the settings API without mixing chat models', async () => {
+    vi.stubEnv('ALLOW_LOCAL_NETWORKS', '1');
+    const added = await put('alice', null, {
+      kind: 'provider',
+      id: 'antigravity',
+      preset: 'antigravity',
+      apiKey: SECRET,
+      baseUrl: 'http://localhost:20128/v1',
+      models: ['ag/gemini-3.1-pro'],
+    });
+    expect(added.status).toBe(200);
+    const llmSelected = await put('alice', (await added.json()).revision, {
+      kind: 'slots',
+      set: { llm: 'antigravity:ag/gemini-3.1-pro' },
+    });
+    expect(llmSelected.status).toBe(200);
+    const saved = await put('alice', (await llmSelected.json()).revision, {
+      kind: 'provider',
+      id: 'antigravity',
+      preset: 'antigravity',
+      imageModels: ['ag/gemini-3.1-flash-image', 'custom/image-model'],
+    });
+    expect(saved.status).toBe(200);
+    const providerView = await saved.json();
+    expect(
+      providerView.providers.find((provider: { id: string }) => provider.id === 'antigravity'),
+    ).toMatchObject({
+      models: ['ag/gemini-3.1-pro'],
+      imageModels: ['ag/gemini-3.1-flash-image', 'custom/image-model'],
+      capabilities: {
+        image: {
+          models: [{ id: 'ag/gemini-3.1-flash-image' }, { id: 'custom/image-model' }],
+        },
+      },
+    });
+    expect(JSON.stringify(providerView)).not.toContain(SECRET);
+    expect(providerView.slots.find((slot: { slot: string }) => slot.slot === 'llm')?.effective)
+      .toMatchObject({ providerId: 'antigravity', modelId: 'ag/gemini-3.1-pro' });
+
+    const assigned = await put('alice', providerView.revision, {
+      kind: 'slots',
+      set: { image: 'antigravity:custom/image-model' },
+    });
+    expect(assigned.status).toBe(200);
+    expect(
+      (await assigned.json()).slots.find((slot: { slot: string }) => slot.slot === 'image')
+        ?.effective,
+    ).toMatchObject({ providerId: 'antigravity', modelId: 'custom/image-model' });
+  });
+
   it('keeps each workspace to its own settings', async () => {
     await put('alice', null, { kind: 'slots', set: { image: null } });
     const bob = await (await get('bob')).json();

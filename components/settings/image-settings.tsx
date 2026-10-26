@@ -139,6 +139,7 @@ export function ImageSettings(props: ServicePanelProps) {
       kind="image"
       defaultBaseUrl={registry?.defaultBaseUrl}
       catalogue={registry?.models ?? []}
+      verifyModelId={use.inUse ? use.modelId : undefined}
     >
       {workflowList || undefined}
     </MediaServicePanel>

@@ -44,6 +44,58 @@ afterEach(() => {
 });
 
 describe('modelSettingsView', () => {
+  it('stores separate editable image models for the Antigravity 9Router account', async () => {
+    vi.stubEnv('ALLOW_LOCAL_NETWORKS', '1');
+    deployment({});
+    let config = await applyModelSettingsChange(null, {
+      kind: 'provider',
+      id: 'antigravity',
+      preset: 'antigravity',
+      apiKey: 'router-key',
+      baseUrl: 'http://localhost:20128/v1',
+      imageModels: ['ag/gemini-3.1-flash-image', 'custom/image-model'],
+    });
+
+    const view = modelSettingsView({ config, revision: 1, unreadableSecrets: [] });
+    const provider = view.providers.find((entry) => entry.id === 'antigravity')!;
+    expect(provider.imageModels).toEqual(['ag/gemini-3.1-flash-image', 'custom/image-model']);
+    expect(provider.capabilities.image?.models.map((model) => model.id)).toEqual([
+      'ag/gemini-3.1-flash-image',
+      'custom/image-model',
+    ]);
+
+    config = await applyModelSettingsChange(config, {
+      kind: 'slots',
+      set: { image: 'antigravity:custom/image-model' },
+    });
+    expect(config.providers?.antigravity?.models).toBeUndefined();
+    expect(config.providers?.antigravity?.imageModels).toEqual([
+      'ag/gemini-3.1-flash-image',
+      'custom/image-model',
+    ]);
+    expect(
+      modelSettingsView({ config, revision: 2, unreadableSecrets: [] }).slots.find(
+        (slot) => slot.slot === 'image',
+      )?.effective,
+    ).toMatchObject({
+      status: 'assigned',
+      providerId: 'antigravity',
+      modelId: 'custom/image-model',
+    });
+  });
+
+  it('keeps the local 9Router image endpoint behind ALLOW_LOCAL_NETWORKS', async () => {
+    deployment({});
+    await expect(
+      applyModelSettingsChange(null, {
+        kind: 'provider',
+        id: 'antigravity',
+        preset: 'antigravity',
+        baseUrl: 'http://localhost:20128/v1',
+      }),
+    ).rejects.toThrow(/ALLOW_LOCAL_NETWORKS/i);
+  });
+
   it('offers only deployment slot models when the provider has no model list', async () => {
     const config: ModelConfigLayer['config'] = {
       providers: {
