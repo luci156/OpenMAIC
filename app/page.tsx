@@ -35,7 +35,11 @@ import { cn } from '@/lib/utils';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
 import { AgentBar } from '@/components/agent/agent-bar';
 import { requestAppSettings } from '@/components/app-chrome';
-import { isIeltsBandRange, type IeltsBandRange } from '@/lib/ielts/bands';
+import {
+  getIeltsBandMismatchRefusal,
+  isIeltsBandRange,
+  type IeltsBandRange,
+} from '@/lib/ielts/bands';
 import { ieltsAppCopy } from '@/lib/i18n/ielts-app-copy';
 import {
   courseGenerationUsable,
@@ -250,6 +254,9 @@ function HomePage() {
   // two async reads land (avoids a visible layout shift on first paint).
   const [hydrated, setHydrated] = useState(false);
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setCurrentFolderId(undefined);
+  }, [ieltsBandRange]);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   // When set, the new-folder dialog is creating a folder AND moving this course
   // into it (entered via the move-menu's "new folder" entry).
@@ -448,16 +455,23 @@ function HomePage() {
     setNewFolderOpen(true);
   };
 
+  const bandClassrooms = useMemo(
+    () =>
+      ieltsBandRange
+        ? classrooms.filter((course) => course.ieltsBandRange === ieltsBandRange)
+        : [],
+    [classrooms, ieltsBandRange],
+  );
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const filteredClassrooms = useMemo(() => {
     const q = deferredSearchQuery.trim().toLowerCase();
-    if (!q) return classrooms;
-    return classrooms.filter((c) => {
+    if (!q) return bandClassrooms;
+    return bandClassrooms.filter((c) => {
       const name = c.name?.toLowerCase() ?? '';
       const desc = c.description?.toLowerCase() ?? '';
       return name.includes(q) || desc.includes(q);
     });
-  }, [classrooms, deferredSearchQuery]);
+  }, [bandClassrooms, deferredSearchQuery]);
 
   // Folder-aware view model. Searching collapses the hierarchy: every matching
   // course is shown flat, annotated with its folder name. Otherwise the root
@@ -476,16 +490,16 @@ function HomePage() {
     );
   }, [filteredClassrooms, isSearching, currentFolderId, folderNameById]);
   const currentFolderClassrooms = useMemo(
-    () => (currentFolderId ? classrooms.filter((c) => c.folderId === currentFolderId) : []),
-    [classrooms, currentFolderId],
+    () => (currentFolderId ? bandClassrooms.filter((c) => c.folderId === currentFolderId) : []),
+    [bandClassrooms, currentFolderId],
   );
   const courseCountByFolder = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const c of classrooms) {
+    for (const c of bandClassrooms) {
       if (c.folderId) counts.set(c.folderId, (counts.get(c.folderId) ?? 0) + 1);
     }
     return counts;
-  }, [classrooms]);
+  }, [bandClassrooms]);
   // Up to 3 member course covers (first-slide thumbnails) per folder, for the
   // folder tile's cover stack. Members are ordered by updatedAt desc so the
   // frontmost cover is the most recently touched course. The members that
@@ -494,7 +508,7 @@ function HomePage() {
   // member without a slide gives its slot to the next one.
   const folderCovers = useMemo(() => {
     const byFolder = new Map<string, { slides: Slide[]; candidates: StageListItem[] }>();
-    for (const c of [...classrooms].sort((a, b) => b.updatedAt - a.updatedAt)) {
+    for (const c of [...bandClassrooms].sort((a, b) => b.updatedAt - a.updatedAt)) {
       if (!c.folderId) continue;
       const covers = byFolder.get(c.folderId) ?? { slides: [], candidates: [] };
       byFolder.set(c.folderId, covers);
@@ -505,15 +519,23 @@ function HomePage() {
       if (slide) covers.slides.push(slide);
     }
     return byFolder;
-  }, [classrooms, thumbnails]);
+  }, [bandClassrooms, thumbnails]);
   const currentFolder = folders.find((f) => f.id === currentFolderId);
+  const visibleFolders = useMemo(
+    () => folders.filter((folder) => (courseCountByFolder.get(folder.id) ?? 0) > 0),
+    [folders, courseCountByFolder],
+  );
+  const bandRuns = useMemo(
+    () => runs.filter((run) => run.input.ieltsBandRange === ieltsBandRange),
+    [runs, ieltsBandRange],
+  );
 
-  const listedStageIds = useMemo(() => new Set(classrooms.map((c) => c.id)), [classrooms]);
-  const runByStageId = useMemo(() => runsByCourse(runs), [runs]);
+  const listedStageIds = useMemo(() => new Set(bandClassrooms.map((c) => c.id)), [bandClassrooms]);
+  const runByStageId = useMemo(() => runsByCourse(bandRuns), [bandRuns]);
   // Runs whose course is not in the library yet are cards of their own.
   const pendingRuns = useMemo(
-    () => pendingCourseRuns(runs, listedStageIds),
-    [runs, listedStageIds],
+    () => pendingCourseRuns(bandRuns, listedStageIds),
+    [bandRuns, listedStageIds],
   );
   const showPendingRuns = !isSearching && currentFolderId === undefined;
 
@@ -567,6 +589,11 @@ function HomePage() {
       setScopeReply(scopeRefusal);
       return;
     }
+    const bandRefusal = getIeltsBandMismatchRefusal(form.requirement, ieltsBandRange);
+    if (bandRefusal) {
+      setScopeReply(bandRefusal);
+      return;
+    }
 
     // The set is frozen while the run starts (`preparingGenerate` makes add,
     // remove and Retry inert), from the ready materials in their order.
@@ -604,7 +631,11 @@ function HomePage() {
         setError(t(err.reason, err.values));
       } else if (err instanceof RunApiError) {
         const refusal = getEnglishIeltsScopeRefusal(form.requirement);
+        const bandRefusal = ieltsBandRange
+          ? getIeltsBandMismatchRefusal(form.requirement, ieltsBandRange)
+          : null;
         if (refusal && err.serverMessage === refusal) setScopeReply(refusal);
+        else if (bandRefusal && err.serverMessage === bandRefusal) setScopeReply(bandRefusal);
         else setError(runApiErrorText(err, t));
       } else {
         setError(err instanceof Error ? err.message : t('upload.generateFailed'));
@@ -947,7 +978,7 @@ function HomePage() {
               )}
               {hydrated ? (
                 <span className="text-[11px] tabular-nums opacity-60">
-                  {currentFolder ? currentFolderClassrooms.length : classrooms.length}
+                  {currentFolder ? currentFolderClassrooms.length : bandClassrooms.length}
                 </span>
               ) : (
                 <span
@@ -1100,7 +1131,10 @@ function HomePage() {
             >
               {!hydrated ? (
                 <LibrarySkeleton />
-              ) : folders.length === 0 && classrooms.length === 0 && pendingRuns.length === 0 ? (
+              ) :
+                visibleFolders.length === 0 &&
+                bandClassrooms.length === 0 &&
+                pendingRuns.length === 0 ? (
                 <div className="pt-8 pb-2 text-center text-[13px] text-muted-foreground/60">
                   {t('classroom.emptyLibraryHint')}
                 </div>
@@ -1164,7 +1198,7 @@ function HomePage() {
                       {/* Root + non-search: render folder tiles first. */}
                       {!isSearching &&
                         currentFolderId === undefined &&
-                        folders.map((folder, i) => (
+                        visibleFolders.map((folder, i) => (
                           <motion.div
                             key={folder.id}
                             initial={{ opacity: 0, y: 16 }}
