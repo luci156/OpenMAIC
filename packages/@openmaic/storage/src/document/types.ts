@@ -158,6 +158,8 @@ export interface DocumentSummary {
   description?: string;
   interactiveMode?: boolean;
   taskEngineMode?: boolean;
+  /** IELTS band for the course, when it is band-scoped. */
+  ieltsBandRange?: string;
   createdAt: number;
   updatedAt: number;
   sceneCount: number;
