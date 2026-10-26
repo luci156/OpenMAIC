@@ -176,6 +176,8 @@ export interface Stage {
    * vocational.
    */
   taskEngineMode?: boolean;
+  /** IELTS learning band this course belongs to; absent on older or imported courses. */
+  ieltsBandRange?: '3.0-5.5' | '5.5-7.0' | '7.0-9.0';
 }
 
 /**
