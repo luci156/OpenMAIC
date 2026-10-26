@@ -8,7 +8,7 @@ import { normalizeSceneOutlines } from '@/lib/server/generation/outline-schema';
 import { MAX_CLASSROOM_MATERIALS } from '@/lib/server/classroom-materials';
 import { isMaterialId } from '@/lib/server/materials/material-id';
 import { getEnglishIeltsScopeRefusal } from '@/lib/prompts/english-ielts-scope';
-import { isIeltsBandRange } from '@/lib/ielts/bands';
+import { getIeltsBandMismatchRefusal, isIeltsBandRange } from '@/lib/ielts/bands';
 import type { SceneOutline } from '@/lib/types/generation';
 
 import type { GenerationRunInput } from './types';
@@ -114,6 +114,10 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
   const ieltsBandRange = body.ieltsBandRange;
   if (ieltsBandRange !== undefined && !isIeltsBandRange(ieltsBandRange)) {
     return { ok: false, message: 'ieltsBandRange must be one of the supported IELTS ranges' };
+  }
+  if (ieltsBandRange) {
+    const bandRefusal = getIeltsBandMismatchRefusal(requirement, ieltsBandRange);
+    if (bandRefusal) return { ok: false, message: bandRefusal };
   }
 
   let materialIds: string[] = [];
