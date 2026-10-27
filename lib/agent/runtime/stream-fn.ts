@@ -43,6 +43,7 @@ import {
   emitToolCallProviderOptions,
   type ToolCallProviderMetadata,
 } from './provider-metadata';
+import { replayToolCallArguments, toolCallArguments } from './tool-call-arguments';
 
 /**
  * Local re-implementation of pi-ai's `AssistantMessageEventStream` queue. pi
@@ -225,7 +226,8 @@ export function createPartMapper(
         type: 'toolCall',
         id: (part.toolCallId ?? part.id) as string,
         name: (part.toolName ?? part.name) as string,
-        arguments: normalizeToolCallInput(part.input ?? part.args ?? {}) as Record<string, unknown>,
+        // Malformed JSON arrives as a raw string; never store it (see helper).
+        arguments: toolCallArguments(part.input ?? part.args),
       };
       // Capture provider-specific metadata (e.g. Gemini thought_signature) via
       // the typed seam so it can be re-emitted on the next turn.
@@ -247,22 +249,6 @@ export function createPartMapper(
   };
 
   return { handle, finalize };
-}
-
-/**
- * OpenAI-compatible relays sometimes pass the function arguments through as a
- * JSON-encoded string instead of the parsed object expected by pi's tool
- * validator. Normalize that wire shape at the provider boundary so valid tool
- * calls (for example `{ "stageId": "..." }`) reach the tool as objects.
- * Invalid JSON is preserved for the normal validation path to report.
- */
-function normalizeToolCallInput(input: unknown): unknown {
-  if (typeof input !== 'string') return input;
-  try {
-    return JSON.parse(input) as unknown;
-  } catch {
-    return input;
-  }
 }
 
 /** Build a pi `StreamFn` that calls OpenMAIC's connector instead of pi-ai providers. */
@@ -534,7 +520,7 @@ export function toModelMessages(
             type: 'tool-call',
             toolCallId: c.id,
             toolName: c.name,
-            input: c.arguments,
+            input: replayToolCallArguments(c.arguments),
           };
           const meta = emitToolCallProviderOptions(
             (c as { providerMetadata?: ToolCallProviderMetadata }).providerMetadata,
