@@ -8,7 +8,7 @@
  * start a run, follow its ordered event log and send it commands; none of them
  * drives the steps.
  */
-import type { AgentInfo } from '@openmaic/generation';
+import type { AgentInfo, SlideStyle } from '@openmaic/generation';
 
 import type { AgentConfig } from '@/lib/orchestration/registry/types';
 import type { SceneOutline } from '@/lib/types/generation';
@@ -85,8 +85,8 @@ export interface GenerationRunInput {
   materialIds: string[];
   interactive: boolean;
   taskEngine: boolean;
-  /** Apply one consistent light visual theme to every generated slide. */
-  slideStyle?: 'consistent-light' | 'ai';
+  /** The selected visual design skill applied to generated slides. */
+  slideStyle?: SlideStyle;
   agents: GenerationRunAgents;
   learnerProfile?: { nickname?: string; bio?: string };
   /**

@@ -8,6 +8,7 @@
 import type { ActionType } from './action';
 import type { MediaGenerationRequest } from '@/lib/media/types';
 import type { IeltsBandRange } from '@/lib/ielts/bands';
+import type { SlideStyle } from '@openmaic/generation';
 
 // ==================== PDF Image Types ====================
 
@@ -99,7 +100,7 @@ export interface UserRequirements {
   webSearch?: boolean; // Enable web search for richer context
   interactiveMode?: boolean; // Enable Interactive Mode for interactive-first generation
   taskEngineMode?: boolean; // Enable vocational task-engine generation path
-  slideStyle?: 'consistent-light'; // Keep generated slides on one light visual theme
+  slideStyle?: SlideStyle;
 }
 
 // ==================== Stage 1 Output: Scene Outlines (Simplified) ====================

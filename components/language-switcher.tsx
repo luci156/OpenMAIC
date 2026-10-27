@@ -32,7 +32,7 @@ export function LanguageSwitcher({ onOpen }: LanguageSwitcherProps) {
       }}
     >
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-gray-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all">
+        <button className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-800 dark:hover:text-violet-200 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-all">
           {supportedLocales.find((l) => l.code === locale)?.shortLabel ?? locale}
         </button>
       </DropdownMenuTrigger>

@@ -6,6 +6,7 @@
  */
 import { ttsSelection } from '@/lib/audio/tts-selection';
 import type { ModelCapabilities } from '@/lib/model-settings/capabilities';
+import { DEFAULT_SLIDE_DESIGN_SKILL } from '@openmaic/generation';
 import { useAgentRegistry, whenAgentRegistryLoaded } from '@/lib/orchestration/registry/store';
 import { useSettingsStore } from '@/lib/store/settings';
 import { useUserProfileStore } from '@/lib/store/user-profile';
@@ -94,7 +95,7 @@ export async function startClassicRun(input: {
     materialIds,
     interactive: input.interactive,
     taskEngine: input.taskEngine,
-    slideStyle: input.slideStyle ?? 'consistent-light',
+    slideStyle: input.slideStyle ?? DEFAULT_SLIDE_DESIGN_SKILL,
     agents,
     ...(learnerProfile ? { learnerProfile } : {}),
     ...(voice ? { voice } : {}),

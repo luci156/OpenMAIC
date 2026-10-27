@@ -55,7 +55,9 @@
     "materialFailed": "Fehlgeschlagen",
     "materialRetry": "Erneut versuchen",
     "materialMediaLabel": "Audio/Video",
-    "materialUnavailable": "Dieses Material ist nicht mehr verfügbar. Entferne es und hänge die Datei erneut an."
+    "materialUnavailable": "Dieses Material ist nicht mehr verfügbar. Entferne es und hänge die Datei erneut an.",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "PPTX exportieren",
@@ -1124,7 +1126,7 @@
     "courseMaterialFormats": "Unterstützt {{formats}} – bis zu {{size}} MB pro Datei",
     "formatListSeparator": ", ",
     "generateFailed": "Kurs konnte nicht erstellt werden. Bitte versuche es erneut.",
-    "requirementPlaceholder": "Beschreibe, was du lernen möchtest, z. B.\n\"Bring mir Python in 30 Minuten von Grund auf bei\"\n\"Erkläre die Fourier-Transformation am Whiteboard\"\n\"Wie spielt man das Brettspiel Avalon?\"",
+    "requirementPlaceholder": "Beschreibe die Englisch- oder IELTS-Fähigkeit, die du lernen möchtest, z. B.\n\"Erkläre das Present Perfect mit einfachen Beispielen\"\n\"Übe IELTS Listening: die Antwortart vorhersagen\"\n\"Lerne akademischen Wortschatz zum Thema Umwelt\"",
     "requirementRequired": "Bitte gib die Kursanforderungen ein",
     "fileTooLarge": "Die Datei ist zu groß. Wähle bitte eine Datei unter 50 MB aus.",
     "courseMaterialCountLimit": "Du kannst bis zu 5 Dateien als Kursmaterial hochladen",
@@ -1417,6 +1419,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS (Lokal)",
     "providerBrowserNativeTTS": "Browserintegrierte TTS",
     "voxcpmVoicesTitle": "VoxCPM-Stimmen",
@@ -1862,6 +1865,12 @@
       "deleteConfirm": "Dadurch wird der Skill aus deinem Konto entfernt. Diese Aktion kann nicht rückgängig gemacht werden.",
       "deleteFailed": "Der Skill konnte nicht gelöscht werden. Versuche es erneut."
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "Browserintegrierte TTS unterstützt die Audiofunktionen der Editor-Zeitleiste nicht (Vorschau, erneute Generierung und Sammelvertonung). Wechsle zu einem verwalteten TTS-Anbieter, um Audio für einzelne Zeilen zu generieren und zu verwalten.",
     "courseModels": {
       "nav": "Kursmodell-Konfiguration"

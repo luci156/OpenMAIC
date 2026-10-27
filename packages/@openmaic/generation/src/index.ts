@@ -93,6 +93,13 @@ export type { JsonParsingOptions } from './json-repair.js';
 export { noopGenerationLogger } from './logger.js';
 export type { GenerationLogger } from './logger.js';
 export {
+  DEFAULT_SLIDE_DESIGN_SKILL,
+  SLIDE_DESIGN_SKILLS,
+  getSlideDesignSkill,
+  isSlideDesignSkillId,
+} from './slide-design-skills.js';
+export type { SlideDesignSkillId, SlideStyle } from './slide-design-skills.js';
+export {
   buildCourseContext,
   buildLanguageText,
   buildVisionUserContent,

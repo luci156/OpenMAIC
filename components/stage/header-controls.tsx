@@ -185,10 +185,10 @@ export function HeaderControls({
     <div className="flex items-center gap-4">
       <div
         className={cn(
-          'shrink-0 flex items-center gap-1 backdrop-blur-md shadow-sm rounded-full',
+          'shrink-0 flex items-center gap-1 rounded-full border backdrop-blur-md shadow-md shadow-violet-950/5 dark:shadow-black/20',
           compact
-            ? 'bg-zinc-100/70 dark:bg-zinc-800/70 border border-zinc-200/60 dark:border-zinc-700/60 px-1.5 py-1'
-            : 'bg-white/60 dark:bg-gray-800/60 border border-gray-100/50 dark:border-gray-700/50 px-2 py-1.5',
+            ? 'bg-white dark:bg-zinc-900 border-violet-200 dark:border-zinc-700 px-1.5 py-1'
+            : 'bg-white dark:bg-gray-900 border-violet-200 dark:border-gray-700 px-2 py-1.5',
         )}
       >
         {/* Language — Radix DropdownMenu so its menu portals to body
@@ -200,7 +200,7 @@ export function HeaderControls({
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button
-              className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all group"
+              className="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-800 dark:hover:text-violet-200 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-all group"
               aria-label={t('settings.theme')}
             >
               {theme === 'light' && <Sun className="w-4 h-4" />}
@@ -248,7 +248,7 @@ export function HeaderControls({
         {/* Settings */}
         <button
           onClick={() => setSettingsOpen(true)}
-          className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all group"
+          className="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-800 dark:hover:text-violet-200 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-all group"
           aria-label={t('settings.title')}
         >
           <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
@@ -265,11 +265,11 @@ export function HeaderControls({
         <label
           className={cn(
             'shrink-0 inline-flex items-center gap-2.5 rounded-full border shadow-sm transition-colors duration-200',
-            'bg-white/60 dark:bg-gray-800/60 backdrop-blur-md',
+            'bg-white dark:bg-gray-900 backdrop-blur-md',
             compact ? 'h-8 px-2.5' : 'h-9 px-3',
             proChecked
               ? 'border-violet-500/60 dark:border-violet-400/60'
-              : 'border-gray-100/50 dark:border-gray-700/50',
+              : 'border-violet-200 dark:border-gray-700',
             !canEdit && mode !== 'edit'
               ? 'opacity-60 cursor-not-allowed'
               : 'cursor-pointer hover:border-violet-400/60 dark:hover:border-violet-500/50',
@@ -290,7 +290,7 @@ export function HeaderControls({
               'text-[11px] font-bold uppercase tracking-[0.14em] tabular-nums select-none transition-colors duration-200',
               proChecked
                 ? 'text-violet-600 dark:text-violet-300'
-                : 'text-gray-500 dark:text-gray-400',
+                : 'text-slate-700 dark:text-gray-300',
             )}
           >
             {t('edit.proMode')}
@@ -317,8 +317,8 @@ export function HeaderControls({
             className={cn(
               'shrink-0 p-2 rounded-full transition-all',
               canExport && !anyExporting
-                ? 'text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm'
-                : 'text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50',
+                ? 'text-slate-600 dark:text-slate-300 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-800 dark:hover:text-violet-200 hover:shadow-sm'
+                : 'text-slate-400 dark:text-gray-500 cursor-not-allowed',
             )}
             aria-label={exportLabel}
           >

@@ -32,6 +32,18 @@ import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupInput, InputGroupButton } from '@/components/ui/input-group';
 import { Textarea as UITextarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import {
+  DEFAULT_SLIDE_DESIGN_SKILL,
+  SLIDE_DESIGN_SKILLS,
+  type SlideDesignSkillId,
+} from '@openmaic/generation/slide-design-skills';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { GenerationToolbar } from '@/components/generation/generation-toolbar';
 import { AgentBar } from '@/components/agent/agent-bar';
 import { requestAppSettings } from '@/components/app-chrome';
@@ -133,14 +145,14 @@ interface FormState {
   requirement: string;
   interactiveMode: boolean;
   vocationalTestMode: boolean;
-  consistentSlideStyle: boolean;
+  slideStyle: SlideDesignSkillId;
 }
 
 const initialFormState: FormState = {
   requirement: '',
   interactiveMode: false,
   vocationalTestMode: false,
-  consistentSlideStyle: true,
+  slideStyle: DEFAULT_SLIDE_DESIGN_SKILL,
 };
 
 function HomePage() {
@@ -457,9 +469,7 @@ function HomePage() {
 
   const bandClassrooms = useMemo(
     () =>
-      ieltsBandRange
-        ? classrooms.filter((course) => course.ieltsBandRange === ieltsBandRange)
-        : [],
+      ieltsBandRange ? classrooms.filter((course) => course.ieltsBandRange === ieltsBandRange) : [],
     [classrooms, ieltsBandRange],
   );
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -616,7 +626,7 @@ function HomePage() {
         materialIds,
         interactive: form.vocationalTestMode ? true : form.interactiveMode,
         taskEngine: form.vocationalTestMode,
-        slideStyle: form.consistentSlideStyle ? 'consistent-light' : 'ai',
+        slideStyle: form.slideStyle,
         capabilities,
       });
       router.push(`/generation-preview?run=${encodeURIComponent(run.id)}`);
@@ -738,15 +748,20 @@ function HomePage() {
         </p>
 
         {ieltsBandRange && (
-          <div className="-mt-3 mb-6 flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-100">
-            <span className="font-semibold">{ieltsAppCopy(locale, 'selectedBand')}: {ieltsBandRange}</span>
-            <span className="hidden text-violet-200/70 sm:inline">· {ieltsAppCopy(locale, 'bandConstraint')}</span>
+          <div className="-mt-3 mb-6 flex items-center gap-2 rounded-full border border-violet-200 bg-violet-100 px-3 py-1.5 text-xs text-violet-950 shadow-sm shadow-violet-900/5 dark:border-violet-300/25 dark:bg-violet-500/10 dark:text-violet-100">
+            <span className="font-semibold text-violet-950 dark:text-violet-100">
+              {ieltsAppCopy(locale, 'selectedBand')}: {ieltsBandRange}
+            </span>
+            <span className="hidden text-violet-800/75 dark:text-violet-200/80 sm:inline">
+              · {ieltsAppCopy(locale, 'bandConstraint')}
+            </span>
             <button
               type="button"
               onClick={() => router.push('/bands')}
-              className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-1 font-medium text-violet-200 transition hover:bg-white/10 hover:text-white"
+              className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-1 font-semibold text-violet-800 transition hover:bg-white/80 hover:text-violet-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-1 dark:text-violet-200 dark:hover:bg-white/10 dark:hover:text-white dark:focus-visible:ring-offset-slate-950"
             >
-              <ArrowLeft className="size-3" />{ieltsAppCopy(locale, 'backToBands')}
+              <ArrowLeft className="size-3" />
+              {ieltsAppCopy(locale, 'backToBands')}
             </button>
           </div>
         )}
@@ -769,7 +784,7 @@ function HomePage() {
             <textarea
               ref={textareaRef}
               placeholder={t('upload.requirementPlaceholder')}
-              className="w-full resize-none border-0 bg-transparent px-4 pt-1 pb-2 text-[13px] leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none min-h-[140px] max-h-[300px]"
+              className="w-full resize-none border-0 bg-transparent px-4 pt-1 pb-2 text-[13px] leading-relaxed placeholder:text-muted-foreground/60 focus:outline-none min-h-[140px] max-h-[300px]"
               value={form.requirement}
               onChange={(e) => updateForm('requirement', e.target.value)}
               onKeyDown={handleKeyDown}
@@ -794,27 +809,45 @@ function HomePage() {
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={form.consistentSlideStyle}
-                    onClick={() => updateForm('consistentSlideStyle', !form.consistentSlideStyle)}
-                    className={cn(
-                      'inline-flex h-8 items-center gap-2 rounded-lg border px-2 text-[11px] font-medium transition-colors',
-                      form.consistentSlideStyle
-                        ? 'border-violet-300 bg-violet-50 text-violet-800 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-200'
-                        : 'border-border bg-background/70 text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    <Presentation className="size-3.5" />
-                    <span>{t('toolbar.consistentSlideStyle')}</span>
-                    <span className={cn('relative h-3.5 w-6 rounded-full transition-colors', form.consistentSlideStyle ? 'bg-violet-500' : 'bg-muted-foreground/25')}>
-                      <span className={cn('absolute left-0.5 top-0.5 size-2.5 rounded-full bg-white transition-transform', form.consistentSlideStyle ? 'translate-x-2.5' : 'translate-x-0')} />
-                    </span>
-                  </button>
+                  <div>
+                    <Select
+                      value={form.slideStyle}
+                      onValueChange={(value) =>
+                        updateForm('slideStyle', value as SlideDesignSkillId)
+                      }
+                    >
+                      <SelectTrigger
+                        aria-label={
+                          locale.startsWith('vi') ? 'Chọn phong cách slide' : 'Choose slide design'
+                        }
+                        className="h-8 w-[214px] border-violet-300 bg-violet-50 px-2 text-[11px] font-medium text-violet-900 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-100"
+                      >
+                        <Presentation className="size-3.5 shrink-0" />
+                        <SelectValue>
+                          {SLIDE_DESIGN_SKILLS.find((skill) => skill.id === form.slideStyle)?.name}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent side="top" align="start" className="w-[330px]">
+                        {SLIDE_DESIGN_SKILLS.map((skill) => (
+                          <SelectItem key={skill.id} value={skill.id} className="py-2">
+                            <span className="flex flex-col gap-0.5 pr-2">
+                              <span className="text-xs font-medium">{skill.name}</span>
+                              <span className="text-[10px] leading-snug text-muted-foreground">
+                                {locale.startsWith('vi')
+                                  ? skill.description.vi
+                                  : skill.description.en}
+                              </span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  {t('toolbar.consistentSlideStyleHint')}
+                  {locale.startsWith('vi')
+                    ? 'Chọn một trong bảy phong cách thiết kế slide.'
+                    : 'Choose one of seven slide design styles.'}
                 </TooltipContent>
               </Tooltip>
 
@@ -1131,8 +1164,7 @@ function HomePage() {
             >
               {!hydrated ? (
                 <LibrarySkeleton />
-              ) :
-                visibleFolders.length === 0 &&
+              ) : visibleFolders.length === 0 &&
                 bandClassrooms.length === 0 &&
                 pendingRuns.length === 0 ? (
                 <div className="pt-8 pb-2 text-center text-[13px] text-muted-foreground/60">

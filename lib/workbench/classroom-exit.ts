@@ -1,7 +1,8 @@
-export type ClassroomExitDecision = { readonly kind: 'push'; readonly href: '/workspace' | '/' };
+export type ClassroomExitDecision = { readonly kind: 'push'; readonly href: string };
 
 interface ClassroomExitContext {
   readonly searchParams: Pick<URLSearchParams, 'get'>;
+  readonly ieltsBandRange?: string | null;
 }
 
 interface ClassroomExitRouter {
@@ -22,6 +23,7 @@ interface ClassroomExitRouter {
  */
 export function resolveClassroomExit({
   searchParams,
+  ieltsBandRange,
 }: ClassroomExitContext): ClassroomExitDecision {
   // An explicit source wins over history: classroom state changes may push
   // intermediate entries onto the stack, while `from` survives refreshes and
@@ -33,17 +35,23 @@ export function resolveClassroomExit({
   // return contract. Browser history still contains the Pro workspace, so
   // without this rule the home arrow would contradict the workspace link.
   if (searchParams.get('returnTo') === 'home') {
-    return { kind: 'push', href: '/' };
+    return { kind: 'push', href: bandHomeHref(ieltsBandRange) };
   }
-  return { kind: 'push', href: '/' };
+  return { kind: 'push', href: bandHomeHref(ieltsBandRange) };
+}
+
+/** Keep an IELTS classroom's selected band when returning to the composer. */
+export function bandHomeHref(ieltsBandRange?: string | null): string {
+  return ieltsBandRange ? `/?band=${encodeURIComponent(ieltsBandRange)}` : '/';
 }
 
 /** Resolve against the current browser, then perform the selected exit. */
 export function exitClassroom(
   router: ClassroomExitRouter,
   searchParams: Pick<URLSearchParams, 'get'>,
+  ieltsBandRange?: string | null,
 ): void {
-  router.push(resolveClassroomExit({ searchParams }).href);
+  router.push(resolveClassroomExit({ searchParams, ieltsBandRange }).href);
 }
 
 export function classroomExitLabelKey(

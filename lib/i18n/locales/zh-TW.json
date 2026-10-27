@@ -55,7 +55,9 @@
     "materialFailed": "失敗",
     "materialRetry": "重試",
     "materialMediaLabel": "影音",
-    "materialUnavailable": "此素材已無法使用，請移除後重新加入檔案。"
+    "materialUnavailable": "此素材已無法使用，請移除後重新加入檔案。",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "匯出 PPTX",
@@ -1109,7 +1111,7 @@
     "courseMaterialFormats": "支援 {{formats}}，單檔最大 {{size}}MB",
     "formatListSeparator": "、",
     "generateFailed": "生成課堂失敗，請重試",
-    "requirementPlaceholder": "輸入你想學的任何內容，例如：\n「從零學 Python，30 分鐘寫出第一個程式」\n「用白板為我講解傅立葉轉換」\n「阿瓦隆桌遊怎麼玩」",
+    "requirementPlaceholder": "請輸入你想學習的英語或 IELTS 內容，例如：\n「用簡單例子講解現在完成式」\n「練習 IELTS 聽力：預測答案類型」\n「學習環境主題的學術英語詞彙」",
     "requirementRequired": "請輸入課程需求",
     "fileTooLarge": "檔案過大，請選擇小於 50MB 的檔案",
     "courseMaterialCountLimit": "最多可上傳 5 個課程材料檔案",
@@ -1402,6 +1404,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS（本機）",
     "providerBrowserNativeTTS": "瀏覽器原生 TTS",
     "voxcpmVoicesTitle": "VoxCPM 聲音",
@@ -1847,6 +1850,12 @@
       "deleteConfirm": "這會從你的帳號中移除該技能，且無法復原。",
       "deleteFailed": "技能刪除失敗，請重試。"
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "瀏覽器內建 TTS 不支援編輯器時間軸的音訊功能（試聽、重新生成、全部配音）。切換到受管 TTS 供應商即可逐句生成和管理音訊。",
     "courseModels": {
       "nav": "課程模型配置"

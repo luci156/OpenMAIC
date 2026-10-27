@@ -229,7 +229,7 @@ export function runRequirements(input: GenerationRunInput, webSearch: boolean): 
     ...(webSearch ? { webSearch: true } : {}),
     ...(input.interactive ? { interactiveMode: true } : {}),
     ...(input.taskEngine ? { taskEngineMode: true } : {}),
-    ...(input.slideStyle === 'consistent-light' ? { slideStyle: 'consistent-light' } : {}),
+    ...(input.slideStyle ? { slideStyle: input.slideStyle } : {}),
   };
 }
 
@@ -527,9 +527,7 @@ async function executeClaimedRun(
                       requirement: input.requirement,
                       ...(input.ieltsBandRange ? { ieltsBandRange: input.ieltsBandRange } : {}),
                       ...(taskEngineMode ? { taskEngineMode: true } : {}),
-                      ...(input.slideStyle === 'consistent-light'
-                        ? { slideStyle: 'consistent-light' as const }
-                        : {}),
+                      ...(input.slideStyle ? { slideStyle: input.slideStyle } : {}),
                     },
             },
             { log, signal: callSignal },

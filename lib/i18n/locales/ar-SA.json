@@ -55,7 +55,9 @@
     "materialFailed": "فشل",
     "materialRetry": "إعادة المحاولة",
     "materialMediaLabel": "صوت/فيديو",
-    "materialUnavailable": "لم تعد هذه المادة متاحة. أزلها ثم أرفق الملف مرة أخرى."
+    "materialUnavailable": "لم تعد هذه المادة متاحة. أزلها ثم أرفق الملف مرة أخرى.",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "تصدير PPTX",
@@ -1124,7 +1126,7 @@
     "courseMaterialFormats": "الصيغ المدعومة: {{formats}} — حتى {{size}} ميغابايت لكل ملف",
     "formatListSeparator": "، ",
     "generateFailed": "فشل توليد الفصل، يرجى المحاولة مرة أخرى",
-    "requirementPlaceholder": "أخبرني بأي شيء تريد تعلمه، مثلاً:\n\"علمني بايثون من الصفر في 30 دقيقة\"\n\"اشرح تحويل فورييه على السبورة\"\n\"كيف تلعب لعبة أفالون\"",
+    "requirementPlaceholder": "اكتب مهارة الإنجليزية أو IELTS التي تريد تعلمها، مثلاً:\n\"اشرح زمن المضارع التام بأمثلة بسيطة\"\n\"تدرّب على IELTS Listening: توقّع نوع الإجابة\"\n\"تعلّم مفردات أكاديمية عن البيئة\"",
     "requirementRequired": "يرجى إدخال متطلبات المقرر",
     "fileTooLarge": "الملف كبير جدًا. يرجى اختيار ملف أصغر من 50 ميغابايت",
     "courseMaterialCountLimit": "يمكنك رفع ما يصل إلى 5 ملفات لمواد المقرر",
@@ -1417,6 +1419,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS (محلي)",
     "providerBrowserNativeTTS": "تحويل النص إلى كلام المدمج في المتصفح",
     "voxcpmVoicesTitle": "أصوات VoxCPM",
@@ -1862,6 +1865,12 @@
       "deleteConfirm": "سيؤدي هذا إلى إزالة المهارة من حسابك، ولا يمكن التراجع عن هذا الإجراء.",
       "deleteFailed": "تعذّر حذف المهارة. حاول مرة أخرى."
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "لا يدعم تحويل النص إلى كلام المدمج في المتصفح ميزات الصوت في الخط الزمني للمحرر (المعاينة وإعادة التوليد والتعليق الصوتي الجماعي). بدّل إلى مزود TTS مُدار لتوليد صوت كل سطر وإدارته.",
     "courseModels": {
       "nav": "إعداد نماذج المقرر"

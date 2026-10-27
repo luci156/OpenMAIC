@@ -15,6 +15,7 @@ import {
   buildVisionUserContent,
   type SceneGenerationContext,
   type AgentInfo,
+  type SlideStyle,
 } from '@openmaic/generation';
 import type {
   SceneOutline,
@@ -45,7 +46,7 @@ export interface SceneActionsInput {
   previousSpeeches?: string[];
   userProfile?: string;
   languageDirective?: string;
-  slideStyle?: 'consistent-light' | 'ai';
+  slideStyle?: SlideStyle;
   ieltsBandRange?: IeltsBandRange;
   /** The scene-actions stage's model. */
   model: StepLanguageModel;

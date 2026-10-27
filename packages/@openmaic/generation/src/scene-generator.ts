@@ -58,6 +58,8 @@ import type {
 } from './pipeline-types.js';
 import { noopGenerationLogger, type GenerationLogger } from './logger.js';
 import { isAbortError } from './generation-retry.js';
+import { getSlideDesignSkill, type SlideStyle } from './slide-design-skills.js';
+import { findSlideLayoutIssues } from './slide-layout-quality.js';
 import { generatePBLV2ProjectSingleCall } from './pbl/planner-single-call.js';
 import { PlannerV2Error } from './pbl/planner-core.js';
 import type { PBLPlannerV2Input } from './pbl/types.js';
@@ -750,9 +752,19 @@ async function generateSlideContent(
     generatedImageEnabled,
     generatedVideoEnabled,
     mediaElementEnabled,
-    slideStyleDirective: userRequirements?.slideStyle === 'consistent-light'
-      ? 'CONSISTENT COURSE THEME (mandatory): Use a clean light presentation style on every slide in this course. Set the slide background to solid #F8FAFC. Use dark navy #0F172A for text, Inter as the font family where available, and violet #6D28D9 with restrained cyan #0891B2 as accents. Keep the same visual identity and typography across slides; vary layout only to suit the content. Do not use dark/black backgrounds, dark panels, or dark full-slide cards.'
-      : '',
+    slideStyleDirective: (() => {
+      const skill = getSlideDesignSkill(userRequirements?.slideStyle);
+      return skill
+        ? [
+            `SELECTED SLIDE DESIGN SKILL: ${skill.name}. Apply this visual system to every regular slide in the course.`,
+            `Use ${skill.background} as the slide canvas, ${skill.text} for primary text, ${skill.panel} for light supporting surfaces, and this palette: ${skill.colors.join(', ')}.`,
+            skill.directive,
+            'Keep the lesson educational and content-led. Use the selected skill consistently across slide backgrounds, typography, diagrams, images, captions, and spacing. Use a relevant assigned or generated image when available; otherwise create a clear native-shape diagram or annotated example. Never invent image IDs.',
+            'Before returning JSON, perform a visual layout audit at the full 1000 × 562.5 canvas size: keep every element inside the margins, maintain clear spacing between unrelated items, and prevent text, labels, arrows, images, and controls from colliding. Prefer fewer readable elements over a dense layout. Keep body copy at 18px or larger and small labels at 14px or larger; if content does not fit, shorten it or use a second scene rather than shrinking type.',
+            'This is a regular teaching lesson, not game UI: do not add timers, scores, or answer-choice buttons unless the lesson content explicitly requires them.',
+          ].join(' ')
+        : '';
+    })(),
   });
 
   if (!prompts) {
@@ -804,7 +816,7 @@ async function generateSlideContent(
   }
 
   const response = await aiCall(prompts.system, userPrompt, visionImages);
-  const generatedData = parseJsonResponse<GeneratedSlideData>(response);
+  let generatedData = parseJsonResponse<GeneratedSlideData>(response);
 
   if (!generatedData || !generatedData.elements || !Array.isArray(generatedData.elements)) {
     log.error(`Failed to parse AI response for: ${outline.title}`);
@@ -839,8 +851,47 @@ async function generateSlideContent(
   }
 
   // Fix elements with missing required fields + aspect ratio correction (while src is still img_id)
-  const fixedElements = fixElementDefaults(generatedData.elements, assignedImages, log);
+  let fixedElements = fixElementDefaults(generatedData.elements, assignedImages, log);
   log.debug(`After element fixing: ${fixedElements.length} elements`);
+
+  let layoutIssues = findSlideLayoutIssues(fixedElements);
+  if (layoutIssues.length > 0) {
+    log.warn(
+      `Generated slide has layout issues; requesting one automatic repair for "${outline.title}": ${layoutIssues.join(' | ')}`,
+    );
+    try {
+      const repairResponse = await aiCall(
+        prompts.system,
+        `${userPrompt}\n\n## AUTOMATIC LAYOUT REPAIR\nThe previous draft failed deterministic layout checks:\n${layoutIssues.map((issue) => `- ${issue}`).join('\n')}\nReturn the complete corrected slide JSON. Preserve the lesson meaning and selected style. Fix the text overflow, move or resize the affected boxes, and remove all text-box collisions. Do not solve this by shrinking text below 14px.`,
+        visionImages,
+      );
+      const repairData = parseJsonResponse<GeneratedSlideData>(repairResponse);
+      if (
+        repairData &&
+        Array.isArray(repairData.elements) &&
+        !findInvalidShapeRotation(repairData.elements)
+      ) {
+        const repairedElements = fixElementDefaults(repairData.elements, assignedImages, log);
+        const repairedIssues = findSlideLayoutIssues(repairedElements);
+        if (repairedIssues.length < layoutIssues.length) {
+          generatedData = repairData;
+          fixedElements = repairedElements;
+          layoutIssues = repairedIssues;
+          log.info(
+            `Automatic layout repair reduced issues for "${outline.title}" to ${layoutIssues.length}.`,
+          );
+        } else {
+          log.warn(
+            `Automatic layout repair did not improve "${outline.title}"; keeping the better draft.`,
+          );
+        }
+      }
+    } catch (error) {
+      log.warn(
+        `Automatic layout repair failed for "${outline.title}": ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
 
   // Process LaTeX elements: render latex string → HTML via KaTeX
   const latexProcessedElements = processLatexElements(fixedElements, log);
@@ -1280,7 +1331,7 @@ export async function generateWidgetContent(
   languageDirective?: string,
   options: {
     allowProceduralSkill?: boolean;
-    slideStyle?: 'consistent-light';
+    slideStyle?: SlideStyle;
     logger?: GenerationLogger;
     onFailure?: (failure: SceneContentFailure) => void;
   } = {},
@@ -1399,9 +1450,12 @@ export async function generateWidgetContent(
     return null;
   }
 
-  if (options.slideStyle === 'consistent-light') {
-    prompts.system += `\n\n## Course-wide visual theme (mandatory)\nThis interactive scene belongs to a course using one consistent light visual identity. Use a light #F8FAFC page background, white or very light content panels, dark navy #0F172A text, Inter/Arial typography, violet #6D28D9 as the primary accent, and restrained cyan #0891B2 as a secondary accent. Keep controls, cards, spacing, typography, and visual density aligned with a clean university lesson presentation. Do not use black or dark full-screen backgrounds or dark panels. Preserve accessible contrast and retain semantic success/error colors where needed. The learner interactions and functionality must remain intact.`;
+  const selectedSkill = getSlideDesignSkill(options.slideStyle);
+  if (selectedSkill) {
+    prompts.system += `\n\n## Course-wide selected design skill (mandatory)\n${selectedSkill.name}: Use ${selectedSkill.background} as the canvas, ${selectedSkill.text} for primary text, ${selectedSkill.panel} for light supporting surfaces, and this palette: ${selectedSkill.colors.join(', ')}. ${selectedSkill.directive} This selected course style overrides conflicting example colors, backgrounds, and decorative defaults earlier in this prompt. Keep controls readable and interactions functional; preserve accessible contrast and semantic success/error colors.`;
   }
+
+  prompts.system += `\n\n## Final layout and runtime audit (mandatory)\nBefore returning the HTML, inspect the actual initial state and every interaction state you implement. Keep the page within the iframe viewport: use responsive sizing, max-width: 100%, min-width: 0, border-box sizing, and no horizontal overflow. Keep text, nodes, edge labels, arrows, controls, and result panels in separate clear regions; no labels may sit on top of nodes or run through arrowheads. If a diagram is crowded, reduce the number of nodes or use a simple left-to-right or top-to-bottom flow instead of shrinking text. Keep inactive or unrevealed content readable: use a subtle fill or border change, never low opacity on the whole node or its text. Verify the layout at narrow and wide widths.\n\nPrevent runtime crashes from missing data: initialize every value before use; validate arrays and objects; use safe fallbacks for optional text (for example, String(value ?? '').split(...)); guard DOM lookups before reading properties; and do not call string methods such as split, trim, or toLowerCase on values that may be undefined or null. Keep event handlers and derived labels safe when optional fields are absent. Return one complete HTML document only.`;
 
   log.info(`Generating ${widgetType} widget for: ${outline.title}`);
   const response = await aiCall(prompts.system, prompts.user);

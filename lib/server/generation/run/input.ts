@@ -10,6 +10,11 @@ import { isMaterialId } from '@/lib/server/materials/material-id';
 import { getEnglishIeltsScopeRefusal } from '@/lib/prompts/english-ielts-scope';
 import { getIeltsBandMismatchRefusal, isIeltsBandRange } from '@/lib/ielts/bands';
 import type { SceneOutline } from '@/lib/types/generation';
+import {
+  DEFAULT_SLIDE_DESIGN_SKILL,
+  isSlideDesignSkillId,
+  type SlideStyle,
+} from '@openmaic/generation';
 
 import type { GenerationRunInput } from './types';
 
@@ -138,9 +143,16 @@ export function parseRunInput(raw: unknown): Parsed<GenerationRunInput> {
   if (!interactive.ok) return interactive;
   const taskEngine = optionalBoolean(body.taskEngine, 'taskEngine');
   if (!taskEngine.ok) return taskEngine;
-  const slideStyle = body.slideStyle ?? 'consistent-light';
-  if (slideStyle !== 'consistent-light' && slideStyle !== 'ai') {
-    return { ok: false, message: 'slideStyle must be "consistent-light" or "ai"' };
+  const rawSlideStyle = body.slideStyle ?? DEFAULT_SLIDE_DESIGN_SKILL;
+  let slideStyle: SlideStyle;
+  if (
+    rawSlideStyle === 'consistent-light' ||
+    rawSlideStyle === 'ai' ||
+    isSlideDesignSkillId(rawSlideStyle)
+  ) {
+    slideStyle = rawSlideStyle;
+  } else {
+    return { ok: false, message: 'slideStyle must name one of the supported slide design skills' };
   }
 
   let agents: GenerationRunInput['agents'] = { mode: 'auto' };

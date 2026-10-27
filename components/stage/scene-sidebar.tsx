@@ -21,6 +21,7 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { useNearViewport } from '@/lib/hooks/use-near-viewport';
 import type { SceneType, SlideContent, InteractiveContent } from '@/lib/types/stage';
 import { PENDING_SCENE_ID } from '@/lib/store/stage';
+import { bandHomeHref } from '@/lib/workbench/classroom-exit';
 
 interface SceneSidebarProps {
   readonly collapsed: boolean;
@@ -45,6 +46,7 @@ export function SceneSidebar({
   const router = useRouter();
   const { scenes, currentSceneId, setCurrentSceneId, generatingOutlines, generationStatus } =
     useStageStore();
+  const stage = useStageStore.use.stage();
   const failedOutlines = useStageStore.use.failedOutlines();
   const generationInterrupted = useStageStore.use.generationInterrupted();
   const viewportSize = useCanvasStore.use.viewportSize();
@@ -128,7 +130,7 @@ export function SceneSidebar({
         {/* Logo Header */}
         <div className="h-10 flex items-center justify-between shrink-0 relative mt-3 mb-1 px-3">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push(bandHomeHref(stage?.ieltsBandRange))}
             className="flex items-center gap-2 cursor-pointer rounded-lg px-1.5 -mx-1.5 py-1 -my-1 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 active:scale-[0.97] transition-all duration-150"
             title={t('generation.backToHome')}
           >

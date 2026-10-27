@@ -330,6 +330,9 @@ export async function generateTTS(
       case 'google-tts':
         return await generateGoogleTTS(config, text, signal);
 
+      case 'google-tts-9router':
+        return await generateGoogle9RouterTTS(config, text, signal);
+
       case 'lemonade-tts':
         return await generateLemonadeTTS(config, text, signal);
 
@@ -403,6 +406,47 @@ async function generateOpenAITTS(
   }
 
   return await validateTTSAudioResponse(response, 'OpenAI');
+}
+
+/**
+ * Google TTS exposed by 9Router through its minimal OpenAI-compatible
+ * `/v1/audio/speech` API. This model derives its language and voice from the
+ * model id, so send only the fields in the provider's curl example.
+ */
+async function generateGoogle9RouterTTS(
+  config: TTSModelConfig,
+  text: string,
+  signal: AbortSignal,
+): Promise<TTSGenerationResult> {
+  const provider = TTS_PROVIDERS['google-tts-9router'];
+  const baseUrl = (config.baseUrl || provider.defaultBaseUrl || '').replace(/\/$/, '');
+  const model = config.modelId || provider.defaultModelId;
+  const response = await ttsFetch(config, `${baseUrl}/audio/speech`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify({ model, input: text }),
+    signal,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    const options = { cause: { data: error } };
+    throwIfTtsRateLimited(
+      'Google TTS (9Router)',
+      response.status,
+      response.headers?.get('retry-after'),
+      options,
+    );
+    throw new Error(
+      `Google TTS (9Router) API error: ${error.error?.message || response.statusText}`,
+      options,
+    );
+  }
+
+  return await validateTTSAudioResponse(response, 'Google TTS (9Router)', 'mp3');
 }
 
 /**

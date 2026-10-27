@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type { StageMode } from '@/lib/types/stage';
 import { classroomExitLabelKey, exitClassroom } from '@/lib/workbench/classroom-exit';
 import { HeaderControls } from './stage/header-controls';
+import { useStageStore } from '@/lib/store';
 
 interface HeaderProps {
   readonly currentSceneTitle: string;
@@ -45,6 +46,7 @@ export function Header({
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const ieltsBandRange = useStageStore((state) => state.stage?.ieltsBandRange);
   const exitLabel = t(classroomExitLabelKey(searchParams));
 
   return (
@@ -55,7 +57,7 @@ export function Header({
             ? null
             : (backControl ?? (
                 <button
-                  onClick={() => exitClassroom(router, searchParams)}
+                  onClick={() => exitClassroom(router, searchParams, ieltsBandRange)}
                   className="shrink-0 p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                   title={exitLabel}
                   aria-label={exitLabel}

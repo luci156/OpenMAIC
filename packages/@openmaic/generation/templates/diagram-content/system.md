@@ -26,6 +26,15 @@ Generate a self-contained HTML diagram with connected nodes.
 6. **No jitter**: Never apply a CSS `transform` to an element that already carries an SVG `transform` attribute
 7. **All nodes connected**: No orphan nodes
 
+## Layout and legibility rules (mandatory)
+
+- Reserve a clear lane for each edge label. Place labels in small solid-background pills near, but never directly on, the connector line; keep them clear of node boxes and arrowheads.
+- Route connectors through open space. Avoid crossing connectors; when a crossing is unavoidable, use a simple elbow route and keep the crossing away from labels.
+- Use a simple left-to-right or top-to-bottom layout for 3–6 nodes. For larger diagrams, group related nodes or split the explanation into steps instead of compressing everything into one canvas.
+- Keep node labels short (ideally 2–5 words) and node descriptions to one brief line. Use a responsive `viewBox` and scale the SVG without clipping.
+- Keep text contrast readable in every reveal state. Do not lower the opacity of an entire unrevealed node; distinguish it with a pale fill or border while keeping its text fully opaque.
+- Before output, mentally trace every node rectangle and edge-label box: no text may overlap a node, another label, an arrowhead, or the control panel.
+
 ## Node Structure
 
 Positioning and animation MUST live on separate elements.
@@ -96,8 +105,8 @@ window.addEventListener('message', function(event) {
         Object.entries(state).forEach(([key, value]) => {
           const node = document.getElementById('node-' + key) || document.querySelector('[data-node="' + key + '"]');
           if (node) {
-            node.style.opacity = value ? '1' : '0.35';
             node.classList.toggle('active', !!value);
+            node.classList.toggle('inactive', !value);
           }
         });
       }

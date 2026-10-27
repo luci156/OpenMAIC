@@ -55,7 +55,9 @@
     "materialFailed": "Falhou",
     "materialRetry": "Tentar novamente",
     "materialMediaLabel": "Áudio/vídeo",
-    "materialUnavailable": "Este material não está mais disponível. Remova-o e anexe o arquivo novamente."
+    "materialUnavailable": "Este material não está mais disponível. Remova-o e anexe o arquivo novamente.",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "Exportar PPTX",
@@ -1124,7 +1126,7 @@
     "courseMaterialFormats": "Suporta {{formats}} — até {{size}} MB por arquivo",
     "formatListSeparator": ", ",
     "generateFailed": "Falha ao gerar a sala, tente novamente",
-    "requirementPlaceholder": "Conte-me o que você quer aprender, por exemplo:\n\"Me ensine Python do zero em 30 minutos\"\n\"Explique a Transformada de Fourier no quadro\"\n\"Como jogar o jogo de tabuleiro Avalon\"",
+    "requirementPlaceholder": "Descreva a habilidade de inglês ou IELTS que você quer aprender, por exemplo:\n\"Explique o present perfect com exemplos simples\"\n\"Pratique IELTS Listening: preveja o tipo de resposta\"\n\"Aprenda vocabulário acadêmico sobre o meio ambiente\"",
     "requirementRequired": "Por favor, descreva os objetivos do curso",
     "fileTooLarge": "Arquivo muito grande. Selecione um arquivo com menos de 50 MB",
     "courseMaterialCountLimit": "Você pode enviar até 5 arquivos de material do curso",
@@ -1417,6 +1419,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS (Local)",
     "providerBrowserNativeTTS": "TTS Nativo do Navegador",
     "voxcpmVoicesTitle": "Vozes VoxCPM",
@@ -1862,6 +1865,12 @@
       "deleteConfirm": "Isso remove o skill da sua conta. Esta ação não pode ser desfeita.",
       "deleteFailed": "Não foi possível excluir o skill. Tente novamente."
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "O TTS nativo do navegador não suporta os recursos de áudio da linha do tempo do editor (pré-visualizar, regenerar e narração em lote). Mude para um provedor de TTS gerenciado para gerar e gerenciar o áudio de cada linha.",
     "courseModels": {
       "nav": "Configuração de modelos do curso"

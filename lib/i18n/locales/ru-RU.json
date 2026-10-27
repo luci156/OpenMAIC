@@ -55,7 +55,9 @@
     "materialFailed": "Ошибка",
     "materialRetry": "Повторить",
     "materialMediaLabel": "Аудио/видео",
-    "materialUnavailable": "Этот материал больше недоступен. Удалите его и прикрепите файл снова."
+    "materialUnavailable": "Этот материал больше недоступен. Удалите его и прикрепите файл снова.",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "Экспорт PPTX",
@@ -1124,7 +1126,7 @@
     "courseMaterialFormats": "Поддерживаются: {{formats}} — до {{size}} МБ на файл",
     "formatListSeparator": ", ",
     "generateFailed": "Ошибка генерации, попробуйте снова",
-    "requirementPlaceholder": "Расскажите, что вы хотите изучить, например:\n\"Научи меня Python с нуля за 30 минут\"\n\"Объясни преобразование Фурье на доске\"\n\"Как играть в настольную игру Авалон\"",
+    "requirementPlaceholder": "Опишите навык английского языка или IELTS, который хотите изучить, например:\n\"Объясни Present Perfect на простых примерах\"\n\"Практика IELTS Listening: предсказываем тип ответа\"\n\"Изучи академическую лексику по теме окружающей среды\"",
     "requirementRequired": "Пожалуйста, укажите требования к курсу",
     "fileTooLarge": "Файл слишком большой. Выберите файл до 50 МБ",
     "courseMaterialCountLimit": "Можно загрузить до 5 файлов материалов курса",
@@ -1417,6 +1419,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS (Локальный)",
     "providerBrowserNativeTTS": "Встроенный TTS браузера",
     "voxcpmVoicesTitle": "Голоса VoxCPM",
@@ -1862,6 +1865,12 @@
       "deleteConfirm": "Навык будет удалён из вашей учётной записи. Это действие нельзя отменить.",
       "deleteFailed": "Не удалось удалить навык. Повторите попытку."
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "Встроенный в браузер TTS не поддерживает функции аудио на таймлайне редактора (прослушивание, повторная генерация и массовая озвучка). Переключитесь на управляемый TTS-провайдер, чтобы генерировать и управлять аудио для каждой строки.",
     "courseModels": {
       "nav": "Настройка моделей курса"

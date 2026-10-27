@@ -499,7 +499,14 @@ export function modelSettingsView(stored: StoredWorkspaceConfig | null): ModelSe
   // The workspace as the calls count it: without user keys, providers it
   // added earlier (and the assignments naming them) are dormant and left out.
   const counted = usableWorkspace(workspace, deployment);
-  const workspaceProviders = counted?.config.providers ?? {};
+  // A deployment's provider of an id outranks a workspace provider with the
+  // same id during resolution. Keep that same precedence in the settings view
+  // so pickers and service lists never render duplicate provider IDs/React keys.
+  const workspaceProviders = Object.fromEntries(
+    Object.entries(counted?.config.providers ?? {}).filter(
+      ([id]) => !Object.hasOwn(deploymentProviders, id),
+    ),
+  );
   const unreadable = new Set(stored?.unreadableSecrets ?? []);
 
   const implicitId = defaultWebFetchProviderId(

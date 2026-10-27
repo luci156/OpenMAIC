@@ -1,4 +1,5 @@
 import type { WidgetType } from '@openmaic/dsl';
+import type { SlideStyle } from './slide-design-skills.js';
 
 export type { WidgetType } from '@openmaic/dsl';
 
@@ -30,7 +31,7 @@ export interface UserRequirements {
   webSearch?: boolean;
   interactiveMode?: boolean;
   taskEngineMode?: boolean;
-  slideStyle?: 'consistent-light';
+  slideStyle?: SlideStyle;
 }
 
 export interface WidgetOutline {

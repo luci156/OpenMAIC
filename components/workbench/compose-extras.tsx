@@ -45,6 +45,9 @@ import { ComposerPendingPill, ComposerPill, ComposerPillRow } from './composer-p
 
 export { useAgentSkills, slashQuery, type AgentSkillInfo };
 
+/** Built-in skills kept in the runtime but omitted from the teacher picker. */
+const HIDDEN_SKILL_PICKER_IDS = new Set(['vocational', 'k12-core-literacy-planning']);
+
 export function SkillSlashMenu({
   filter,
   onPick,
@@ -71,7 +74,8 @@ export function SkillSlashMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const matches = [...skills]
+  const matches = skills
+    .filter((skill) => !HIDDEN_SKILL_PICKER_IDS.has(skill.id))
     .sort((a, b) => Number(b.source === 'user') - Number(a.source === 'user'))
     .filter(
       (s) =>

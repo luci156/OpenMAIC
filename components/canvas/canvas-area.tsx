@@ -247,7 +247,7 @@ export function CanvasArea({
             </div>
           )}
 
-          {/* Play hint — breathing button when idle or paused (slides only) */}
+          {/* Keep the play affordance away from slide content; playback controls remain in the toolbar. */}
           <AnimatePresence>
             {showPlayHint && (
               <motion.div
@@ -255,33 +255,11 @@ export function CanvasArea({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="absolute inset-0 z-[102] flex items-center justify-center pointer-events-none"
+                className="absolute bottom-5 right-5 z-[102] pointer-events-none"
               >
-                <motion.div
-                  className="opacity-50 group-hover/canvas:opacity-100 transition-opacity duration-300 pointer-events-auto cursor-pointer"
-                  exit={{ pointerEvents: 'none' }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPlayPause();
-                  }}
-                >
-                  <motion.div
-                    initial={{ scale: 0.85 }}
-                    animate={{ scale: [1, 1.06] }}
-                    exit={{ scale: 1.15, opacity: 0 }}
-                    transition={{
-                      default: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                      scale: {
-                        repeat: Infinity,
-                        repeatType: 'mirror',
-                        duration: 1,
-                        ease: 'easeInOut',
-                      },
-                    }}
-                    className="w-20 h-20 rounded-full bg-white/95 dark:bg-gray-800/95 flex items-center justify-center shadow-[0_4px_30px_rgba(147,51,234,0.15),inset_0_0_0_1px_rgba(233,213,255,0.5)] dark:shadow-[0_4px_30px_rgba(147,51,234,0.3),inset_0_0_0_1px_rgba(126,34,206,0.3)]"
-                    style={{ willChange: 'transform' }}
-                  >
-                    <Play className="w-7 h-7 text-purple-600 dark:text-purple-400 fill-purple-600/90 dark:fill-purple-400/90 ml-0.5" />
+                <motion.div className="opacity-30 group-hover/canvas:opacity-80 transition-opacity duration-300">
+                  <motion.div className="w-12 h-12 rounded-full bg-white/95 dark:bg-gray-800/95 flex items-center justify-center shadow-md ring-1 ring-purple-200/70 dark:ring-purple-800/70">
+                    <Play className="w-5 h-5 text-purple-600 dark:text-purple-400 fill-purple-600/90 dark:fill-purple-400/90 ml-0.5" />
                   </motion.div>
                 </motion.div>
               </motion.div>

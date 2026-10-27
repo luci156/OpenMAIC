@@ -4,6 +4,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useSettingsStore } from '@/lib/store/settings';
 import {
@@ -12,7 +19,7 @@ import {
   getManuallySelectableTTSModels,
 } from '@/lib/audio/constants';
 import type { BuiltInTTSProviderId } from '@/lib/audio/types';
-import { Volume2, Loader2, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react';
+import { Volume2, Loader2, CheckCircle2, XCircle, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createLogger } from '@/lib/logger';
 import { useTTSPreview } from '@/lib/audio/use-tts-preview';
@@ -113,6 +120,8 @@ export function ttsEndpointPath(providerId: string): string {
       return '/unidirectional';
     case 'google-tts':
       return '/interactions';
+    case 'google-tts-9router':
+      return '/audio/speech';
     default:
       return '';
   }
@@ -125,12 +134,14 @@ export function TTSSettings({ view, apply, entry }: ServicePanelProps) {
   const setTTSSpeed = useSettingsStore((state) => state.setTTSSpeed);
   const ttsVoice = useSettingsStore((state) => state.ttsVoice);
   const ttsVoiceProviderId = useSettingsStore((state) => state.ttsVoiceProviderId);
+  const setTTSVoice = useSettingsStore((state) => state.setTTSVoice);
 
   const providerId = entry.registryId;
   const ttsProvider = TTS_PROVIDERS[providerId as BuiltInTTSProviderId];
   const isBrowser = providerId === 'browser-native-tts';
   const isVoxCPM = providerId === VOXCPM_TTS_PROVIDER_ID;
   const isDoubao = providerId === 'doubao-tts';
+  const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([]);
   const editable =
     (entry.state === 'workspace' || entry.state === 'available') &&
     !isBrowser &&
@@ -152,8 +163,11 @@ export function TTSSettings({ view, apply, entry }: ServicePanelProps) {
       }),
     [capabilities, ttsVoice, ttsVoiceProviderId, ttsSpeed],
   );
-  const effectiveVoice =
-    use.inUse && selection
+  const effectiveVoice = isBrowser
+    ? ttsVoiceProviderId === providerId && ttsVoice
+      ? ttsVoice
+      : 'default'
+    : use.inUse && selection
       ? selection.voice
       : defaultVoiceFor(providerId, use.modelId, entry.provider?.options, entry.provider?.voices);
   const cloneSpeedDisabled =
@@ -184,6 +198,32 @@ export function TTSSettings({ view, apply, entry }: ServicePanelProps) {
 
   // Stop a preview when the panel goes away.
   useEffect(() => stopPreview, [stopPreview]);
+
+  useEffect(() => {
+    if (!isBrowser || typeof window === 'undefined' || !window.speechSynthesis) {
+      setBrowserVoices([]);
+      return;
+    }
+    const synthesis = window.speechSynthesis;
+    const loadVoices = () => setBrowserVoices(synthesis.getVoices());
+    loadVoices();
+    synthesis.addEventListener('voiceschanged', loadVoices);
+    return () => synthesis.removeEventListener('voiceschanged', loadVoices);
+  }, [isBrowser]);
+
+  const orderedBrowserVoices = useMemo(() => {
+    const uniqueVoices = new Map<string, SpeechSynthesisVoice>();
+    for (const voice of browserVoices) {
+      if (!uniqueVoices.has(voice.voiceURI)) uniqueVoices.set(voice.voiceURI, voice);
+    }
+    return [...uniqueVoices.values()].sort((a, b) => {
+      const aVietnamese = a.lang.toLowerCase().startsWith('vi') ? 0 : 1;
+      const bVietnamese = b.lang.toLowerCase().startsWith('vi') ? 0 : 1;
+      return (
+        aVietnamese - bVietnamese || a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name)
+      );
+    });
+  }, [browserVoices]);
 
   const save = (apiKey: string) => saveServiceProvider(view, apply, entry, { apiKey }, t);
   // Azure Speech takes its official endpoint for the region the key belongs to.
@@ -231,8 +271,54 @@ export function TTSSettings({ view, apply, entry }: ServicePanelProps) {
           timeline's per-line audio (preview / regenerate / bulk voiceover) is
           unavailable on it — surface that when this provider is selected. */}
       {isBrowser && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-          {t('settings.ttsBrowserNativeTimelineNotice')}
+        <div className="space-y-3">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+            {t('settings.ttsBrowserNativeTimelineNotice')}
+          </div>
+          <div className="space-y-2 rounded-lg border border-border/60 p-3">
+            <Label className="text-sm">{t('settings.browserVoice')}</Label>
+            <div className="flex gap-2">
+              <Select
+                value={effectiveVoice || 'default'}
+                onValueChange={(voice) => setTTSVoice(voice, providerId)}
+                disabled={orderedBrowserVoices.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t('settings.browserVoiceAuto')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">{t('settings.browserVoiceAuto')}</SelectItem>
+                  {orderedBrowserVoices.map((voice) => (
+                    <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
+                      {voice.name} ({voice.lang || 'unknown'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={t('settings.browserVoiceRefresh')}
+                title={t('settings.browserVoiceRefresh')}
+                onClick={() => setBrowserVoices(window.speechSynthesis?.getVoices() ?? [])}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">{t('settings.browserVoiceHint')}</p>
+            {orderedBrowserVoices.length === 0 && (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                {t('settings.browserVoiceUnavailable')}
+              </p>
+            )}
+            {orderedBrowserVoices.length > 0 &&
+              !orderedBrowserVoices.some((voice) => voice.lang.toLowerCase().startsWith('vi')) && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  {t('settings.browserVoiceNoVietnamese')}
+                </p>
+              )}
+          </div>
         </div>
       )}
 

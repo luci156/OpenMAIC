@@ -55,7 +55,9 @@
     "materialFailed": "실패",
     "materialRetry": "다시 시도",
     "materialMediaLabel": "오디오/비디오",
-    "materialUnavailable": "이 자료는 더 이상 사용할 수 없습니다. 제거한 뒤 파일을 다시 첨부하세요."
+    "materialUnavailable": "이 자료는 더 이상 사용할 수 없습니다. 제거한 뒤 파일을 다시 첨부하세요.",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "PPTX 내보내기",
@@ -1124,7 +1126,7 @@
     "courseMaterialFormats": "{{formats}} 지원 — 파일당 최대 {{size}}MB",
     "formatListSeparator": ", ",
     "generateFailed": "교실 생성에 실패했습니다. 다시 시도해주세요",
-    "requirementPlaceholder": "학습하고 싶은 내용을 자유롭게 입력하세요, 예:\n\"파이썬을 30분 만에 처음부터 가르쳐주세요\"\n\"칠판에 푸리에 변환을 설명해주세요\"\n\"보드게임 Avalon 하는 방법\"",
+    "requirementPlaceholder": "배우고 싶은 영어 또는 IELTS 역량을 입력하세요. 예:\n\"간단한 예시로 현재완료를 설명해 주세요\"\n\"IELTS Listening 연습: 답변 유형 예측하기\"\n\"환경 주제의 학술 어휘 배우기\"",
     "requirementRequired": "강좌 요구사항을 입력해주세요",
     "fileTooLarge": "파일이 너무 큽니다. 50MB 미만의 파일을 선택해주세요",
     "courseMaterialCountLimit": "강의 자료 파일은 최대 5개까지 업로드할 수 있습니다",
@@ -1417,6 +1419,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS (로컬)",
     "providerBrowserNativeTTS": "브라우저 기본 TTS",
     "voxcpmVoicesTitle": "VoxCPM 음성",
@@ -1862,6 +1865,12 @@
       "deleteConfirm": "계정에서 이 스킬을 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
       "deleteFailed": "스킬을 삭제하지 못했습니다. 다시 시도하세요."
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "브라우저 내장 TTS는 편집기 타임라인의 오디오 기능(미리듣기·다시 생성·전체 음성 생성)을 지원하지 않습니다. 관리형 TTS 공급자로 전환하면 줄별 오디오를 생성·관리할 수 있습니다.",
     "courseModels": {
       "nav": "코스 모델 설정"

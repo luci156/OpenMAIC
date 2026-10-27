@@ -55,7 +55,9 @@
     "materialFailed": "失敗",
     "materialRetry": "再試行",
     "materialMediaLabel": "音声/動画",
-    "materialUnavailable": "この資料は利用できなくなりました。削除してからファイルを追加し直してください。"
+    "materialUnavailable": "この資料は利用できなくなりました。削除してからファイルを追加し直してください。",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "PPTXエクスポート",
@@ -1124,7 +1126,7 @@
     "courseMaterialFormats": "対応形式：{{formats}}（1ファイル最大{{size}}MB）",
     "formatListSeparator": "、",
     "generateFailed": "教室の生成に失敗しました。もう一度お試しください",
-    "requirementPlaceholder": "学びたいことを自由に入力してください。例えば：\n「Pythonをゼロから30分で教えて」\n「フーリエ変換をホワイトボードで解説して」\n「ボードゲーム『アバロン』の遊び方」",
+    "requirementPlaceholder": "学びたい英語またはIELTSのスキルを入力してください。例：\n「現在完了形を簡単な例で説明して」\n「IELTSリスニング練習：答えの種類を予測する」\n「環境に関するアカデミックな語彙を学ぶ」",
     "requirementRequired": "コースの要件を入力してください",
     "fileTooLarge": "ファイルが大きすぎます。50MB以下のファイルを選択してください",
     "courseMaterialCountLimit": "教材ファイルは最大5件までアップロードできます",
@@ -1417,6 +1419,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS（ローカル）",
     "providerBrowserNativeTTS": "ブラウザネイティブTTS",
     "voxcpmVoicesTitle": "VoxCPM 音色",
@@ -1862,6 +1865,12 @@
       "deleteConfirm": "このスキルをアカウントから削除します。この操作は元に戻せません。",
       "deleteFailed": "スキルを削除できませんでした。もう一度お試しください。"
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "ブラウザ内蔵 TTS はエディターのタイムライン音声機能（試聴・再生成・一括音声生成）に対応していません。マネージド TTS プロバイダーに切り替えると、行ごとの音声を生成・管理できます。",
     "courseModels": {
       "nav": "コースモデル設定"

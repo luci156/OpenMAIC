@@ -8,6 +8,7 @@ import type {
   GeneratedQuizContent,
   GeneratedSlideContent,
 } from './scene-types.js';
+import { getSlideDesignSkill, type SlideStyle } from './slide-design-skills.js';
 
 export interface BuildCompleteSceneOptions {
   /**
@@ -17,12 +18,13 @@ export interface BuildCompleteSceneOptions {
    */
   sceneId?: string;
   /** A course-wide visual theme applied to every slide scene. */
-  slideStyle?: 'consistent-light' | 'ai';
+  slideStyle?: SlideStyle;
 }
 
-const CONSISTENT_LIGHT_COLORS = ['#6D28D9', '#0891B2', '#334155', '#A78BFA'];
+function applySlideDesignSkill(elements: PPTElement[], slideStyle: SlideStyle): PPTElement[] {
+  const skill = getSlideDesignSkill(slideStyle);
+  if (!skill) return elements;
 
-function consistentLightElements(elements: PPTElement[]): PPTElement[] {
   return elements.map((element) => {
     if (element.type === 'text') {
       const content = element.content.replace(
@@ -31,29 +33,27 @@ function consistentLightElements(elements: PPTElement[]): PPTElement[] {
           const styleMatch = attributes.match(/\sstyle=(['"])(.*?)\1/i);
           const previous = styleMatch?.[2] ?? '';
           const style = previous
-            .replace(/(?:^|;)\s*(?:color|font-family)\s*:[^;]*/gi, '')
+            .replace(/(?:^|;)\s*font-family\s*:[^;]*/gi, '')
             .replace(/^\s*;|;\s*$/g, '');
-          const nextStyle = [style, 'color:#0F172A', 'font-family:Inter,Arial,sans-serif']
-            .filter(Boolean)
-            .join(';');
-          const rest = styleMatch
-            ? attributes.replace(styleMatch[0], '')
-            : attributes;
+          const fontName = /^h[1-3]$/i.test(name) ? skill.titleFont : skill.bodyFont;
+          const font =
+            fontName === 'Georgia'
+              ? "font-family:Georgia,'Times New Roman',serif"
+              : 'font-family:Inter,Arial,sans-serif';
+          const nextStyle = [style, font].filter(Boolean).join(';');
+          const rest = styleMatch ? attributes.replace(styleMatch[0], '') : attributes;
           return `<${name}${rest} style="${nextStyle}">`;
         },
       );
       return {
         ...element,
         content,
-        defaultFontName: 'Inter',
-        defaultColor: '#0F172A',
+        defaultFontName: skill.bodyFont,
+        defaultColor: skill.text,
       };
     }
-    if (element.type === 'shape' && /^#(?:0[0-9a-f]{5}|1[0-9a-f]{5})$/i.test(element.fill)) {
-      return { ...element, fill: '#E2E8F0' };
-    }
     if (element.type === 'chart') {
-      return { ...element, themeColors: [...CONSISTENT_LIGHT_COLORS] };
+      return { ...element, themeColors: [...skill.colors] };
     }
     return element;
   });
@@ -75,24 +75,26 @@ export function buildCompleteScene(
   const timestamps = { createdAt: Date.now(), updatedAt: Date.now() };
 
   if (outline.type === 'slide' && 'elements' in content) {
-    const consistentLight = options.slideStyle === 'consistent-light';
+    const skill = getSlideDesignSkill(options.slideStyle);
     const defaultTheme: SlideTheme = {
-      backgroundColor: consistentLight ? '#F8FAFC' : '#ffffff',
-      themeColors: consistentLight
-        ? [...CONSISTENT_LIGHT_COLORS]
+      backgroundColor: skill?.background ?? '#ffffff',
+      themeColors: skill
+        ? [...skill.colors]
         : ['#5b9bd5', '#ed7d31', '#a5a5a5', '#ffc000', '#4472c4'],
-      fontColor: consistentLight ? '#0F172A' : '#333333',
-      fontName: consistentLight ? 'Inter' : 'Microsoft YaHei',
-      outline: { color: '#d14424', width: 2, style: 'solid' },
-      shadow: { h: 0, v: 0, blur: 10, color: '#000000' },
+      fontColor: skill?.text ?? '#333333',
+      fontName: skill?.bodyFont ?? 'Inter',
+      outline: { color: skill?.colors[0] ?? '#167E78', width: 2, style: 'solid' },
+      shadow: { h: 0, v: 0, blur: 8, color: '#A7A7A7' },
     };
     const canvas: Slide = {
       id: nanoid(),
       viewportSize: 1000,
       viewportRatio: 0.5625,
       theme: defaultTheme,
-      elements: consistentLight ? consistentLightElements(content.elements) : content.elements,
-      background: consistentLight ? { type: 'solid', color: '#F8FAFC' } : content.background,
+      elements: skill
+        ? applySlideDesignSkill(content.elements, options.slideStyle ?? 'consistent-light')
+        : content.elements,
+      background: skill ? { type: 'solid', color: skill.background } : content.background,
     };
     return {
       id: sceneId,

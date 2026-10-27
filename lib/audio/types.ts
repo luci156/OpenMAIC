@@ -90,6 +90,7 @@ export type BuiltInTTSProviderId =
   | 'elevenlabs-tts'
   | 'minimax-tts'
   | 'google-tts'
+  | 'google-tts-9router'
   | 'lemonade-tts'
   | 'browser-native-tts';
 

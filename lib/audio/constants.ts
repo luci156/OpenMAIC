@@ -1209,6 +1209,22 @@ export const TTS_PROVIDERS: Record<BuiltInTTSProviderId, TTSProviderConfig> = {
     supportsSpeed: false,
   },
 
+  'google-tts-9router': {
+    id: 'google-tts-9router',
+    name: 'Google TTS (9Router)',
+    requiresApiKey: true,
+    defaultBaseUrl: 'http://localhost:20128/v1',
+    icon: '/logos/gemini.svg',
+    models: [
+      { id: 'google-tts/vi', name: 'Google TTS Vietnamese' },
+      { id: 'google-tts/en', name: 'Google TTS English' },
+    ],
+    defaultModelId: 'google-tts/vi',
+    voices: [{ id: 'default', name: 'Default', language: 'vi-VN', gender: 'neutral' }],
+    supportedFormats: ['mp3'],
+    supportsSpeed: false,
+  },
+
   'browser-native-tts': {
     id: 'browser-native-tts',
     name: '浏览器原生 (Web Speech API)',
@@ -1580,6 +1596,7 @@ export const DEFAULT_TTS_VOICES: Record<BuiltInTTSProviderId, string> = {
   'elevenlabs-tts': 'EXAVITQu4vr4xnSDxMaL',
   'minimax-tts': 'female-yujie',
   'google-tts': 'Kore',
+  'google-tts-9router': 'default',
   'lemonade-tts': 'af_heart',
   'browser-native-tts': 'default',
 };
@@ -1594,6 +1611,7 @@ export const DEFAULT_TTS_MODELS: Record<BuiltInTTSProviderId, string> = {
   'elevenlabs-tts': 'eleven_multilingual_v2',
   'minimax-tts': 'speech-2.8-hd',
   'google-tts': 'gemini-3.1-flash-tts-preview',
+  'google-tts-9router': 'google-tts/vi',
   'lemonade-tts': 'kokoro-v1',
   'browser-native-tts': '',
 };

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useBrand, useIsDesktop } from '@/lib/brand/brand-context';
 import { useStageStore } from '@/lib/store';
+import { bandHomeHref } from '@/lib/workbench/classroom-exit';
 import { useSettingsStore } from '@/lib/store/settings';
 import { useI18n } from '@/lib/hooks/use-i18n';
 import { useDeletedSceneRecycle } from '@/lib/edit/deleted-scene-recycle';
@@ -402,7 +403,7 @@ export function SlideNavRail() {
           {!collapsed && !isDesktop && (
             <button
               type="button"
-              onClick={() => router.push('/')}
+              onClick={() => router.push(bandHomeHref(stage?.ieltsBandRange))}
               title={t('generation.backToHome')}
               className="flex items-center gap-2 cursor-pointer rounded-lg px-1.5 -mx-1.5 py-1 -my-1 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 active:scale-[0.97] transition-all duration-150"
             >

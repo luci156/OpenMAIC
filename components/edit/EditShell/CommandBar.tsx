@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/hooks/use-i18n';
 import { cn } from '@/lib/utils';
 import type { EditorCommand, SurfaceHistory } from '@/lib/edit/scene-editor-surface';
 import { classroomExitLabelKey, exitClassroom } from '@/lib/workbench/classroom-exit';
+import { useStageStore } from '@/lib/store';
 
 interface CommandBarProps {
   readonly title: string;
@@ -37,6 +38,7 @@ export function CommandBar({ title, history, commands, trailing }: CommandBarPro
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const ieltsBandRange = useStageStore((state) => state.stage?.ieltsBandRange);
   const exitLabel = t(classroomExitLabelKey(searchParams));
 
   return (
@@ -47,7 +49,7 @@ export function CommandBar({ title, history, commands, trailing }: CommandBarPro
         <IconButton
           title={exitLabel}
           aria-label={exitLabel}
-          onClick={() => exitClassroom(router, searchParams)}
+          onClick={() => exitClassroom(router, searchParams, ieltsBandRange)}
         >
           <ArrowLeft className="h-4 w-4" />
         </IconButton>

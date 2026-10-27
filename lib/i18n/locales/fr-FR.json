@@ -55,7 +55,9 @@
     "materialFailed": "Échec",
     "materialRetry": "Réessayer",
     "materialMediaLabel": "Audio/vidéo",
-    "materialUnavailable": "Ce support n'est plus disponible. Retirez-le et joignez à nouveau le fichier."
+    "materialUnavailable": "Ce support n'est plus disponible. Retirez-le et joignez à nouveau le fichier.",
+    "consistentSlideStyle": "Slide design",
+    "consistentSlideStyleHint": "Choose one of seven slide design styles for generated lessons."
   },
   "export": {
     "pptx": "Exporter en PPTX",
@@ -1124,7 +1126,7 @@
     "courseMaterialFormats": "Formats pris en charge : {{formats}} — jusqu’à {{size}} Mo par fichier",
     "formatListSeparator": ", ",
     "generateFailed": "Échec de la génération de la classe, veuillez réessayer",
-    "requirementPlaceholder": "Dites-moi ce que vous voulez apprendre, par exemple :\n« Apprends-moi Python en partant de zéro en 30 minutes »\n« Explique la transformation de Fourier au tableau »\n« Comment jouer au jeu de société Avalon »",
+    "requirementPlaceholder": "Décrivez la compétence d’anglais ou d’IELTS que vous souhaitez apprendre, par exemple :\n« Explique le present perfect avec des exemples simples »\n« Entraîne-toi à l’IELTS Listening : prédire le type de réponse »\n« Apprends le vocabulaire académique sur l’environnement »",
     "requirementRequired": "Veuillez saisir vos attentes pour le cours",
     "fileTooLarge": "Fichier trop volumineux. Veuillez choisir un fichier de moins de 50 Mo",
     "courseMaterialCountLimit": "Vous pouvez envoyer jusqu’à 5 supports de cours",
@@ -1417,6 +1419,7 @@
     "providerElevenLabsTTS": "ElevenLabs TTS",
     "providerMiniMaxTTS": "MiniMax TTS",
     "providerGoogleTTS": "Google Gemini TTS",
+    "providerGoogle9RouterTTS": "Google TTS (9Router)",
     "providerLemonadeTTS": "Lemonade TTS (local)",
     "providerBrowserNativeTTS": "Synthèse vocale native du navigateur",
     "voxcpmVoicesTitle": "Voix VoxCPM",
@@ -1862,6 +1865,12 @@
       "deleteConfirm": "Ce skill sera supprimé de votre compte. Cette action est irréversible.",
       "deleteFailed": "Impossible de supprimer le skill. Veuillez réessayer."
     },
+    "browserVoice": "Browser voice",
+    "browserVoiceAuto": "Automatic (use Vietnamese when available)",
+    "browserVoiceHint": "Voices come from your browser and operating system. Choose a voice marked vi-VN for Vietnamese.",
+    "browserVoiceRefresh": "Refresh voice list",
+    "browserVoiceUnavailable": "No browser voices found. Install voices in your operating system, then refresh the list.",
+    "browserVoiceNoVietnamese": "No Vietnamese voice found. Install a Vietnamese (vi-VN) voice in Windows, then refresh the list.",
     "ttsBrowserNativeTimelineNotice": "La synthèse vocale native du navigateur ne prend pas en charge les fonctions audio de la piste de l’éditeur (écoute, régénération et sonorisation groupée). Choisissez un fournisseur de synthèse vocale géré pour produire et gérer l’audio réplique par réplique.",
     "courseModels": {
       "nav": "Configuration des modèles de cours"
