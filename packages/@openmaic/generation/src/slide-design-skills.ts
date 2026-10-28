@@ -11,10 +11,10 @@ export const SLIDE_DESIGN_SKILLS = [
     text: '#333333',
     panel: '#F4F2EF',
     colors: ['#CC5500', '#71362B', '#D9D9D6', '#F4F2EF'],
-    titleFont: 'Arial',
-    bodyFont: 'Inter',
+    titleFont: 'Times New Roman',
+    bodyFont: 'Times New Roman',
     directive:
-      'Use crisp white and charcoal with burnt orange as the active accent and deep clay only as a secondary note. Use bold sans-serif headings, a precise grid, generous negative space, and one assertive visual move. Prefer asymmetrically cropped images that press against one or two slide edges. Keep modules open; avoid centered generic covers and repeated equal-card rows.',
+      'Use crisp white and charcoal with burnt orange as the active accent and deep clay only as a secondary note. Use bold Times New Roman headings, a precise grid, generous negative space, and one assertive visual move. Prefer asymmetrically cropped images that press against one or two slide edges. Keep modules open; avoid centered generic covers and repeated equal-card rows.',
   },
   {
     id: 'washi-soft-glow',
@@ -27,10 +27,10 @@ export const SLIDE_DESIGN_SKILLS = [
     text: '#333333',
     panel: '#ECEBE7',
     colors: ['#2C3E50', '#8995B7', '#777F6C', '#AA6F5F'],
-    titleFont: 'Georgia',
-    bodyFont: 'Inter',
+    titleFont: 'Times New Roman',
+    bodyFont: 'Times New Roman',
     directive:
-      'Use a calm washi-paper mood with a soft light canvas, charcoal text, and indigo as the only active accent. Set titles in a restrained serif and body copy in a clear sans serif. Use fine rules, open frames, asymmetric columns, spacious grids, and only a faint paper texture if supported. Keep glow local and barely visible. Avoid heavy cards, filled icon badges, decorative blobs, neon, and centered title-plus-bullets layouts.',
+      'Use a calm washi-paper mood with a soft light canvas, charcoal text, and indigo as the only active accent. Use Times New Roman throughout; distinguish titles from body copy with size and weight. Use fine rules, open frames, asymmetric columns, spacious grids, and only a faint paper texture if supported. Keep glow local and barely visible. Avoid heavy cards, filled icon badges, decorative blobs, neon, and centered title-plus-bullets layouts.',
   },
   {
     id: 'soft-3d-clay',
@@ -43,10 +43,10 @@ export const SLIDE_DESIGN_SKILLS = [
     text: '#333333',
     panel: '#FFF9EF',
     colors: ['#B2AC88', '#DBADAD', '#6B6B6B', '#E7DAC8'],
-    titleFont: 'Inter',
-    bodyFont: 'Inter',
+    titleFont: 'Times New Roman',
+    bodyFont: 'Times New Roman',
     directive:
-      'Use warm beige as the main surface with sage and muted warm pink as small accents. Add a few soft matte geometric forms—rounded spheres, capsules, rings, or soft cubes—near corners to frame the lesson. Suggest depth only with two or three flat layers and very pale shadows; keep shapes sparse and away from small text. Use clean rounded-feeling sans typography, generous whitespace, and stable alignment. Avoid glossy plastic, metallic reflections, harsh perspective, dense shape stacks, and childlike cartoon styling.',
+      'Use warm beige as the main surface with sage and muted warm pink as small accents. Add a few soft matte geometric forms—rounded spheres, capsules, rings, or soft cubes—near corners to frame the lesson. Suggest depth only with two or three flat layers and very pale shadows; keep shapes sparse and away from small text. Use restrained Times New Roman typography, generous whitespace, and stable alignment. Avoid glossy plastic, metallic reflections, harsh perspective, dense shape stacks, and childlike cartoon styling.',
   },
   {
     id: 'futuristic-tech-editorial',
@@ -59,10 +59,10 @@ export const SLIDE_DESIGN_SKILLS = [
     text: '#2B2B2B',
     panel: '#F7F9FC',
     colors: ['#2F6BFF', '#6B6B6B', '#E6EAF2', '#A7B4CA'],
-    titleFont: 'Inter',
-    bodyFont: 'Inter',
+    titleFont: 'Times New Roman',
+    bodyFont: 'Times New Roman',
     directive:
-      'Use a white technical editorial canvas, graphite text, and electric blue sparingly for the key signal. Build a precise grid with asymmetric open modules, thin low-contrast dividers, brackets, ticks, or axes. Convert dense bullet lists into labeled steps, timelines, comparisons, or sparse diagrams. Keep one side visibly quieter. Avoid dashboard density, heavy cards, shadows, glow, blur, gradients, and 3D.',
+      'Use a white technical editorial canvas, graphite text, and electric blue sparingly for the key signal. Build a precise grid with asymmetric open modules and thin low-contrast dividers. Convert dense bullet lists into labeled steps, timelines, comparisons, or sparse diagrams. Keep one side visibly quieter. Avoid dashboard density, heavy cards, shadows, glow, blur, gradients, and 3D.',
   },
   {
     id: 'minimalist-luxury-branding',
@@ -75,10 +75,10 @@ export const SLIDE_DESIGN_SKILLS = [
     text: '#3A3A3A',
     panel: '#FBF7F1',
     colors: ['#A68A64', '#746F68', '#D8CCBD', '#8E7760'],
-    titleFont: 'Georgia',
-    bodyFont: 'Inter',
+    titleFont: 'Times New Roman',
+    bodyFont: 'Times New Roman',
     directive:
-      'Use a warm cream canvas, soft brown as a restrained accent, and deep gray text. Pair elegant serif headings with clean sans-serif body copy. Keep content density low, margins wide, and composition intentionally asymmetric with one dominant message and one quiet supporting element. Use fine rules and refined, relevant photographs or material details when useful. Avoid heavy borders, gradients, shadows, dense grids, decorative scripts, and generic stock imagery.',
+      'Use a warm cream canvas, soft brown as a restrained accent, and deep gray text. Use Times New Roman for all text, with hierarchy created through size and weight. Keep content density low, margins wide, and composition intentionally asymmetric with one dominant message and one quiet supporting element. Use fine rules and refined, relevant photographs or material details when useful. Avoid heavy borders, gradients, shadows, dense grids, decorative scripts, and generic stock imagery.',
   },
   {
     id: 'modern-illustration-editorial',
@@ -91,8 +91,8 @@ export const SLIDE_DESIGN_SKILLS = [
     text: '#2F2F2F',
     panel: '#EAF4FC',
     colors: ['#A7C7E7', '#E8A87C', '#DED8D1', '#A3B6A2'],
-    titleFont: 'Inter',
-    bodyFont: 'Inter',
+    titleFont: 'Times New Roman',
+    bodyFont: 'Times New Roman',
     directive:
       'Use a soft beige or white canvas, charcoal text, muted blue and dusty orange as illustration accents. Pair one clear text area with one strong, refined conceptual illustration that explains the lesson. Use smooth curves, organic layered flat shapes, sparse details, thin strokes, and only subtle local gradients or pale grounding shadows. Keep large negative space and open modules. Avoid mascots, clipart, photorealistic 3D, heavy shadows, stickers, and busy full-slide scenes.',
   },
@@ -107,8 +107,8 @@ export const SLIDE_DESIGN_SKILLS = [
     text: '#2B2B2B',
     panel: '#EAE7E1',
     colors: ['#6C7A89', '#BDBDBD', '#EAE7E1', '#8F988A'],
-    titleFont: 'Inter',
-    bodyFont: 'Inter',
+    titleFont: 'Times New Roman',
+    bodyFont: 'Times New Roman',
     directive:
       'Use warm off-white paper, softened ink-charcoal text, and muted indigo only as a quiet accent. Keep headings light and refined; create hierarchy with spacing and alignment rather than heavy bold. Draw delicate, slightly imperfect organic lines with sparse annotations and very light watercolor-like washes. Use generous asymmetric margins and thin dividers. Avoid sharp tech geometry, dense cards, neon, 3D objects, glossy UI, and busy full-canvas illustration.',
   },

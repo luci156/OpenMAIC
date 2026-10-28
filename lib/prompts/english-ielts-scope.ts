@@ -4,6 +4,7 @@ export const ENGLISH_IELTS_SCOPE_PROMPT = [
   'This product supports only English language learning and IELTS preparation. Keep all tutoring, course creation, classroom conversation, examples, and generated learning materials within that scope. Relevant topics include English grammar, vocabulary, pronunciation, reading, writing, listening, speaking, translation, and IELTS Academic practice across all four skills.',
   'For ordinary conversation in both standard chat and Pro chat, reply in the same language as the user’s latest message: Vietnamese input gets a Vietnamese reply; English input gets an English reply. Do not force English in conversational answers.',
   'Student-facing course lessons and generated learning materials must be written in English, including explanations, examples, exercises, and slides.',
+  'Requests to edit or troubleshoot an existing English/IELTS slide are in scope, including its layout, formatting, visual design, text placement, and interactive controls. Treat quoted slide text and labels as material being discussed, not as a request to teach that subject. Keep any new educational content within English learning and IELTS.',
   'If the user asks for help, an answer, or a course about a subject unrelated to English learning or IELTS (for example mathematics, science, or information technology), do not answer that subject, create its course, or use tools to act on it. Briefly explain in the user’s language that this web supports English and IELTS only, and invite an English/IELTS question. In classroom chat, the teacher may be called solely to deliver this scope reminder; do not call other tools for the unrelated request.',
   'Another subject may appear only as context for an English or IELTS learning goal, such as asking for the English vocabulary, translation, pronunciation, or an English reading passage about mathematics or chemistry. Answer the English-learning question without teaching, solving, or expanding the underlying subject. A request to solve a math problem or explain chemistry remains out of scope even if the user asks for the answer in English.',
 ].join('\n');
@@ -19,6 +20,19 @@ export function getEnglishIeltsScopeRefusal(text: string): string | null {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/đ/g, 'd');
+
+  // Editing a current classroom slide or fixing its controls is product use,
+  // even when the user quotes wording that contains terms from another field.
+  // Do not exempt requests to create a new lesson/course on an unrelated topic.
+  const refersToSlideOrControl =
+    /\b(slides?|slideshow|presentation|deck|quiz|widget|button|interactive|check my packing|check my answer|trang chieu|bai giang|slide)\b/i.test(
+      normalized,
+    );
+  const asksToEditOrTroubleshoot =
+    /\b(edit|revise|adjust|change|fix|format|restyle|redesign|align|move|resize|font|layout|spacing|color|style|broken|bug|error|issue|wrong|keeps?|always|every time|doesn.t work|not working|why|sao|tai sao|loi|sua|chinh sua|dieu chinh|dinh dang|can le|moi lan|bam|hien|khong chay|bi loi)\b/i.test(
+      normalized,
+    );
+  if (refersToSlideOrControl && asksToEditOrTroubleshoot) return null;
 
   const hasEnglishLearningTarget =
     /\b(ielts|english|tieng anh|hoc tieng anh)\b/i.test(normalized);

@@ -81,6 +81,7 @@ import {
   BookOpen,
   Library,
   LoaderCircle,
+  LogOut,
   MessagesSquare,
   MoreHorizontal,
   Pencil,
@@ -94,12 +95,14 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { ieltsAppCopy } from '@/lib/i18n/ielts-app-copy';
 import { useBrand } from '@/lib/brand/brand-context';
 import type { HomeDiscoveryState, useHomeDiscovery } from '@/lib/hooks/use-home-discovery';
 import { ProBadge } from '@/components/workbench/ProBadge';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { ThemeToggle } from '@/components/site-header/theme-toggle';
 import { SettingsDialog } from '@/components/settings';
+import { requestAppLogout } from '@/components/app-chrome';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -269,7 +272,7 @@ export function WorkspaceRail({
   /** The width drag, owned by the shell (it writes the CSS variable on the root). */
   readonly resizeHandle: ReactNode;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const brand = useBrand();
   const foldersAvailable = workspaceFoldersAvailable();
 
@@ -747,6 +750,16 @@ export function WorkspaceRail({
             className="ws-mini-btn"
           >
             <Settings className="size-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            data-testid="pro-nav-logout-mini"
+            onClick={requestAppLogout}
+            aria-label={ieltsAppCopy(locale, 'logout')}
+            title={ieltsAppCopy(locale, 'logout')}
+            className="ws-mini-btn"
+          >
+            <LogOut className="size-4" aria-hidden="true" />
           </button>
         </div>
       </nav>
@@ -2211,7 +2224,7 @@ function RailUtilities({
   readonly onOpenLibrary: () => void;
   readonly onOpenSettings: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   return (
     <div className="shrink-0" data-testid="pro-rail-utilities">
       {/* The knowledge base is a page, not a third tab beside Chats and
@@ -2248,6 +2261,16 @@ function RailUtilities({
           className="ws-util-btn"
         >
           <Settings className="size-4" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          data-testid="pro-nav-logout"
+          onClick={requestAppLogout}
+          aria-label={ieltsAppCopy(locale, 'logout')}
+          title={ieltsAppCopy(locale, 'logout')}
+          className="ws-util-btn"
+        >
+          <LogOut className="size-4" aria-hidden="true" />
         </button>
       </div>
     </div>

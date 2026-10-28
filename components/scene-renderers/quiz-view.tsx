@@ -9,10 +9,18 @@ import {
   XCircle,
   RotateCcw,
   ChevronRight,
+  ChevronLeft,
   Check,
+  Volume2,
+  VolumeX,
   BookOpenText,
   Loader2,
   Sparkles,
+  Timer,
+  Triangle,
+  Diamond,
+  Circle,
+  Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
@@ -41,6 +49,128 @@ import {
   type QuizRuntimeGate,
   type QuizViewLifetime,
 } from '@/lib/quiz/view-state';
+
+const KAHOOT_OPTION_COLORS = [
+  'bg-[#e21b3c] hover:bg-[#c81735] text-white',
+  'bg-[#1368ce] hover:bg-[#0f57ae] text-white',
+  'bg-[#f2c500] hover:bg-[#d9b200] text-[#342900]',
+  'bg-[#26890c] hover:bg-[#1f700a] text-white',
+];
+const KAHOOT_OPTION_SHAPES = [Triangle, Diamond, Circle, Square];
+const QUESTION_TIME_LIMIT = 20;
+
+function hasQuizAnswer(answer: string | string[] | undefined): boolean {
+  return Array.isArray(answer) ? answer.length > 0 : !!answer?.trim();
+}
+
+function KahootFireworks() {
+  const { t } = useI18n();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setVisible(false), 1700);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (!visible) return null;
+
+  const bursts = [
+    { left: '22%', top: '34%' },
+    { left: '50%', top: '24%' },
+    { left: '78%', top: '36%' },
+  ];
+  const colors = ['#ff4b6e', '#ffd43b', '#37d5ff', '#9b6bff', '#44e28a'];
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-live="polite">
+      {bursts.map((burst, burstIndex) => (
+        <div key={burstIndex} className="absolute" style={burst}>
+          {Array.from({ length: 12 }, (_, index) => {
+            const angle = (Math.PI * 2 * index) / 12;
+            const distance = 54 + (index % 3) * 16;
+            return (
+              <motion.span
+                key={index}
+                className="absolute block h-2 w-2 rounded-sm"
+                style={{
+                  left: -4,
+                  top: -4,
+                  backgroundColor: colors[(index + burstIndex) % colors.length],
+                }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 0.4, rotate: 0 }}
+                animate={{
+                  x: Math.cos(angle) * distance,
+                  y: Math.sin(angle) * distance,
+                  opacity: 0,
+                  scale: 1,
+                  rotate: 180 + index * 24,
+                }}
+                transition={{ duration: 1.1, ease: 'easeOut', delay: burstIndex * 0.08 }}
+              />
+            );
+          })}
+        </div>
+      ))}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, y: 8 }}
+        animate={{ opacity: [0, 1, 1, 0], scale: [0.7, 1.05, 1, 1], y: [8, 0, 0, -8] }}
+        transition={{ duration: 1.7, times: [0, 0.18, 0.72, 1] }}
+        className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-lg font-black text-emerald-950 shadow-xl"
+      >
+        <Sparkles className="h-5 w-5" /> {t('quiz.correct')}!
+      </motion.div>
+    </div>
+  );
+}
+
+function createQuizMusic() {
+  const AudioContextConstructor = window.AudioContext;
+  if (!AudioContextConstructor) return null;
+
+  try {
+    const context = new AudioContextConstructor();
+    void context.resume().catch(() => {});
+    // An original, lightweight chiptune-style loop. This intentionally does not
+    // use or reproduce Kahoot's copyrighted theme recording.
+    const notes = [659.25, 783.99, 987.77, 783.99, 880, 1046.5, 783.99, 659.25];
+    let noteIndex = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let stopped = false;
+
+    const playNote = () => {
+      if (stopped) return;
+      if (context.state !== 'running') {
+        timer = setTimeout(playNote, 100);
+        return;
+      }
+      const now = context.currentTime;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = notes[noteIndex % notes.length];
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.022, now + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.19);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.2);
+      noteIndex += 1;
+      timer = setTimeout(playNote, noteIndex % 4 === 0 ? 360 : 260);
+    };
+
+    playNote();
+    return {
+      stop() {
+        stopped = true;
+        if (timer) clearTimeout(timer);
+        void context.close();
+      },
+    };
+  } catch {
+    return null;
+  }
+}
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -176,8 +306,8 @@ function QuizCover({
         transition={{ delay: 0.1 }}
         className="text-center z-10"
       >
-        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('quiz.title')}</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('quiz.subtitle')}</p>
+        <h3 className="text-xl font-bold text-white">{t('quiz.title')}</h3>
+        <p className="text-sm text-white/75 mt-1">{t('quiz.subtitle')}</p>
       </motion.div>
 
       <motion.div
@@ -186,17 +316,17 @@ function QuizCover({
         transition={{ delay: 0.2 }}
         className="flex gap-5 text-sm z-10"
       >
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-          <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
-            <BookOpenText className="w-3.5 h-3.5 text-violet-500" />
+        <div className="flex items-center gap-2 text-white/80">
+          <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center">
+            <BookOpenText className="w-3.5 h-3.5 text-white" />
           </div>
           <span>
             {questionCount} {t('quiz.questionsCount')}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-          <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
-            <PieChart className="w-3.5 h-3.5 text-violet-500" />
+        <div className="flex items-center gap-2 text-white/80">
+          <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center">
+            <PieChart className="w-3.5 h-3.5 text-white" />
           </div>
           <span>
             {t('quiz.totalPrefix')} {totalPoints} {t('quiz.pointsSuffix')}
@@ -211,7 +341,7 @@ function QuizCover({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onStart}
-        className="mt-1 px-8 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-full font-medium shadow-lg shadow-violet-200/50 dark:shadow-violet-900/50 hover:shadow-violet-300/50 transition-shadow z-10 flex items-center gap-2"
+        className="mt-1 px-8 py-2.5 bg-[#1368ce] text-white rounded-xl font-bold shadow-lg hover:bg-[#0f57ae] transition-shadow z-10 flex items-center gap-2"
       >
         {t('quiz.startQuiz')}
         <ChevronRight className="w-4 h-4" />
@@ -227,6 +357,7 @@ function SingleChoiceQuestion({
   onChange,
   disabled,
   result,
+  gameMode = false,
 }: {
   question: QuizQuestion;
   index: number;
@@ -234,13 +365,15 @@ function SingleChoiceQuestion({
   onChange: (value: string) => void;
   disabled?: boolean;
   result?: QuestionResult;
+  gameMode?: boolean;
 }) {
   const isReview = !!result;
 
   return (
-    <QuestionCard question={question} index={index} result={result}>
-      <div className="grid gap-2">
-        {question.options?.map((opt) => {
+    <QuestionCard question={question} index={index} result={result} gameMode={gameMode}>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {question.options?.map((opt, optionIndex) => {
+          const OptionShape = KAHOOT_OPTION_SHAPES[optionIndex % KAHOOT_OPTION_SHAPES.length];
           const selected = value === opt.value;
           const isCorrectOpt = isReview && answerIncludesOption(question, opt.value);
           const isWrong = isReview && selected && result?.status === 'incorrect';
@@ -251,14 +384,15 @@ function SingleChoiceQuestion({
               disabled={disabled}
               onClick={() => !disabled && onChange(opt.value)}
               className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all text-sm',
+                cn(
+                  'flex min-h-[76px] items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all text-sm font-semibold',
+                  gameMode &&
+                    'min-h-[104px] justify-center gap-4 px-5 text-center text-base sm:text-lg',
+                ),
                 // Default state
                 !isReview &&
-                  !selected &&
-                  'border-gray-200 dark:border-gray-600 hover:border-violet-200 dark:hover:border-violet-700 hover:bg-violet-50/50 dark:hover:bg-violet-900/30',
-                !isReview &&
-                  selected &&
-                  'border-violet-400 bg-violet-50 dark:bg-violet-900/30 ring-1 ring-violet-200 dark:ring-violet-700',
+                  `${KAHOOT_OPTION_COLORS[optionIndex % KAHOOT_OPTION_COLORS.length]} border-transparent shadow-sm hover:-translate-y-0.5 hover:shadow-md`,
+                !isReview && selected && 'outline outline-2 outline-white/80 outline-offset-[-4px]',
                 // Review states
                 isReview &&
                   isCorrectOpt &&
@@ -276,11 +410,9 @@ function SingleChoiceQuestion({
             >
               <span
                 className={cn(
-                  'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
-                  !isReview &&
-                    !selected &&
-                    'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
-                  !isReview && selected && 'bg-violet-500 text-white',
+                  'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-colors',
+                  !isReview && !selected && 'bg-black/15 text-current',
+                  !isReview && selected && 'bg-black/15 text-current',
                   isReview && isCorrectOpt && 'bg-emerald-500 text-white',
                   isReview && isWrong && !isCorrectOpt && 'bg-red-400 text-white',
                   isReview &&
@@ -289,15 +421,20 @@ function SingleChoiceQuestion({
                     'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500',
                 )}
               >
-                {opt.value}
+                {gameMode ? <OptionShape className="h-5 w-5 fill-current" /> : opt.value}
               </span>
               <span
                 className={cn(
                   'flex-1',
+                  !isReview && 'text-white',
+                  isReview && 'text-gray-800 dark:text-gray-100',
                   isReview && !isCorrectOpt && !selected && 'text-gray-400 dark:text-gray-500',
                 )}
               >
-                <QuizMathText text={opt.label} />
+                <QuizMathText
+                  text={opt.label}
+                  className={gameMode ? 'font-bold leading-snug' : undefined}
+                />
               </span>
               {isReview && isCorrectOpt && (
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -320,6 +457,7 @@ function MultipleChoiceQuestion({
   onChange,
   disabled,
   result,
+  gameMode = false,
 }: {
   question: QuizQuestion;
   index: number;
@@ -327,6 +465,7 @@ function MultipleChoiceQuestion({
   onChange: (value: string[]) => void;
   disabled?: boolean;
   result?: QuestionResult;
+  gameMode?: boolean;
 }) {
   const isReview = !!result;
   const selected = value ?? [];
@@ -343,14 +482,15 @@ function MultipleChoiceQuestion({
   const { t } = useI18n();
 
   return (
-    <QuestionCard question={question} index={index} result={result}>
+    <QuestionCard question={question} index={index} result={result} gameMode={gameMode}>
       {!isReview && (
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">
           {t('quiz.multipleChoiceHint')}
         </p>
       )}
-      <div className="grid gap-2">
-        {question.options?.map((opt) => {
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {question.options?.map((opt, optionIndex) => {
+          const OptionShape = KAHOOT_OPTION_SHAPES[optionIndex % KAHOOT_OPTION_SHAPES.length];
           const isSelected = selected.includes(opt.value);
           const isCorrectOpt = isReview && answerIncludesOption(question, opt.value);
           const isWrong = isReview && isSelected && !isCorrectOpt;
@@ -361,13 +501,16 @@ function MultipleChoiceQuestion({
               disabled={disabled}
               onClick={() => toggle(opt.value)}
               className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all text-sm',
+                cn(
+                  'flex min-h-[76px] items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all text-sm font-semibold',
+                  gameMode &&
+                    'min-h-[104px] justify-center gap-4 px-5 text-center text-base sm:text-lg',
+                ),
                 !isReview &&
-                  !isSelected &&
-                  'border-gray-200 dark:border-gray-600 hover:border-violet-200 dark:hover:border-violet-700 hover:bg-violet-50/50 dark:hover:bg-violet-900/30',
+                  `${KAHOOT_OPTION_COLORS[optionIndex % KAHOOT_OPTION_COLORS.length]} border-transparent shadow-sm hover:-translate-y-0.5 hover:shadow-md`,
                 !isReview &&
                   isSelected &&
-                  'border-violet-400 bg-violet-50 dark:bg-violet-900/30 ring-1 ring-violet-200 dark:ring-violet-700',
+                  'outline outline-2 outline-white/80 outline-offset-[-4px]',
                 isReview &&
                   isCorrectOpt &&
                   'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30',
@@ -381,11 +524,9 @@ function MultipleChoiceQuestion({
             >
               <span
                 className={cn(
-                  'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
-                  !isReview &&
-                    !isSelected &&
-                    'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
-                  !isReview && isSelected && 'bg-violet-500 text-white',
+                  'w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black shrink-0 transition-colors',
+                  !isReview && !isSelected && 'bg-black/15 text-current',
+                  !isReview && isSelected && 'bg-black/15 text-current',
                   isReview && isCorrectOpt && 'bg-emerald-500 text-white',
                   isReview && isWrong && 'bg-red-400 text-white',
                   isReview &&
@@ -394,15 +535,30 @@ function MultipleChoiceQuestion({
                     'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500',
                 )}
               >
-                {!isReview && isSelected ? <Check className="w-3.5 h-3.5" /> : opt.value}
+                {gameMode && !isReview ? (
+                  isSelected ? (
+                    <Check className="h-5 w-5" />
+                  ) : (
+                    <OptionShape className="h-5 w-5 fill-current" />
+                  )
+                ) : !isReview && isSelected ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  opt.value
+                )}
               </span>
               <span
                 className={cn(
                   'flex-1',
+                  !isReview && 'text-white',
+                  isReview && 'text-gray-800 dark:text-gray-100',
                   isReview && !isCorrectOpt && !isSelected && 'text-gray-400 dark:text-gray-500',
                 )}
               >
-                <QuizMathText text={opt.label} />
+                <QuizMathText
+                  text={opt.label}
+                  className={gameMode ? 'font-bold leading-snug' : undefined}
+                />
               </span>
               {isReview && isCorrectOpt && (
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -423,6 +579,7 @@ function ShortAnswerQuestion({
   onChange,
   disabled,
   result,
+  gameMode = false,
 }: {
   question: QuizQuestion;
   index: number;
@@ -430,6 +587,7 @@ function ShortAnswerQuestion({
   onChange: (value: string) => void;
   disabled?: boolean;
   result?: QuestionResult;
+  gameMode?: boolean;
 }) {
   const isReview = !!result;
   const { t } = useI18n();
@@ -440,7 +598,7 @@ function ShortAnswerQuestion({
   }, [value]);
 
   return (
-    <QuestionCard question={question} index={index} result={result}>
+    <QuestionCard question={question} index={index} result={result} gameMode={gameMode}>
       {!isReview ? (
         <div className="relative">
           <textarea
@@ -503,11 +661,13 @@ function QuestionCard({
   index,
   result,
   children,
+  gameMode = false,
 }: {
   question: QuizQuestion;
   index: number;
   result?: QuestionResult;
   children: React.ReactNode;
+  gameMode?: boolean;
 }) {
   const { t } = useI18n();
   const isReview = !!result;
@@ -519,8 +679,10 @@ function QuestionCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       className={cn(
-        'bg-white dark:bg-gray-800 rounded-2xl border p-5 relative overflow-hidden',
-        !isReview && 'border-gray-150 dark:border-gray-700 shadow-sm',
+        'rounded-2xl border p-5 relative overflow-hidden',
+        gameMode && !isReview && 'border-white/10 bg-[#1c2a3d] text-white p-5 sm:p-6 shadow-xl',
+        !gameMode && 'bg-white dark:bg-gray-800',
+        !isReview && !gameMode && 'border-gray-150 dark:border-gray-700 shadow-sm',
         isReview &&
           result.status === 'correct' &&
           'border-emerald-200 dark:border-emerald-800 shadow-sm shadow-emerald-50 dark:shadow-emerald-900/20',
@@ -546,7 +708,9 @@ function QuestionCard({
             className={cn(
               'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
               !isReview &&
+                !gameMode &&
                 'bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400',
+              !isReview && gameMode && 'bg-violet-600/25 text-violet-300',
               isReview &&
                 result.status === 'correct' &&
                 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
@@ -558,10 +722,22 @@ function QuestionCard({
             {index + 1}
           </span>
           <div>
-            <div className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
+            <div
+              className={cn(
+                'leading-relaxed',
+                gameMode && !isReview
+                  ? 'text-lg font-bold text-white sm:text-xl'
+                  : 'text-sm font-medium text-gray-800 dark:text-gray-100',
+              )}
+            >
               <QuizMathText text={question.question} allowDisplayMode />
             </div>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p
+              className={cn(
+                'text-xs mt-0.5',
+                gameMode && !isReview ? 'text-white/55' : 'text-gray-400',
+              )}
+            >
               {question.type === 'single'
                 ? t('quiz.singleChoice')
                 : question.type === 'multiple'
@@ -696,9 +872,18 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
   const [phase, setPhase] = useState<Phase>('not_started');
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [results, setResults] = useState<QuestionResult[]>([]);
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+  const [secondsRemaining, setSecondsRemaining] = useState(QUESTION_TIME_LIMIT);
+  const [timedOutQuestions, setTimedOutQuestions] = useState<Record<string, boolean>>({});
+  const [celebrationNonce, setCelebrationNonce] = useState(0);
+  const [musicEnabled, setMusicEnabled] = useState(true);
   const [runtimeGate, setRuntimeGate] = useState<QuizRuntimeGate>({ status: 'loading' });
   const [hydrationVersion, setHydrationVersion] = useState(0);
   const [retrying, setRetrying] = useState(false);
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
+  const questionsRef = useRef(questions);
+  questionsRef.current = questions;
   const viewLifetimeRef = useRef<QuizViewLifetime | null>(null);
   viewLifetimeRef.current ??= createQuizViewLifetime();
   const viewLifetime = viewLifetimeRef.current;
@@ -707,6 +892,14 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
     onError: (error) => log.warn('Failed to persist quiz runtime:', error),
   });
   const runtimeWriter = runtimeWriterRef.current;
+  const quizMusicRef = useRef<{ stop: () => void } | null>(null);
+
+  const stopQuizMusic = useCallback(() => {
+    quizMusicRef.current?.stop();
+    quizMusicRef.current = null;
+  }, []);
+
+  useEffect(() => () => stopQuizMusic(), [stopQuizMusic]);
 
   useEffect(() => {
     return () => {
@@ -725,6 +918,12 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
         setPhase(next.phase);
         setAnswers(next.answers);
         setResults(next.results);
+        setTimedOutQuestions({});
+        setMusicEnabled(next.phase !== 'answering');
+        const firstUnanswered = questionsRef.current.findIndex(
+          (question) => !hasQuizAnswer(next.answers[question.id]),
+        );
+        setActiveQuestionIndex(firstUnanswered < 0 ? 0 : firstUnanswered);
         setRuntimeGate({ status: 'ready', attemptId: nextAttemptId });
       })
       .catch((error) => {
@@ -745,14 +944,59 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
     [questions],
   );
 
-  const allAnswered = useMemo(() => {
-    return questions.every((q) => {
-      const a = answers[q.id];
-      if (!a) return false;
-      if (Array.isArray(a)) return a.length > 0;
-      return (a as string).trim().length > 0;
-    });
-  }, [questions, answers]);
+  const activeQuestion = questions[activeQuestionIndex];
+  const currentQuestionAnswered = activeQuestion
+    ? hasQuizAnswer(answers[activeQuestion.id])
+    : false;
+  const currentQuestionTimedOut = activeQuestion ? !!timedOutQuestions[activeQuestion.id] : false;
+  const currentQuestionResult = activeQuestion
+    ? results.find((result) => result.questionId === activeQuestion.id)
+    : undefined;
+  const currentQuestionSettled = !!currentQuestionResult || currentQuestionTimedOut;
+  const allQuestionsSettled = questions.every(
+    (question) =>
+      (question.type === 'short_answer'
+        ? hasQuizAnswer(answers[question.id])
+        : results.some((result) => result.questionId === question.id)) ||
+      !!timedOutQuestions[question.id],
+  );
+
+  useEffect(() => {
+    if (
+      phase !== 'answering' ||
+      !activeQuestion ||
+      currentQuestionSettled ||
+      (activeQuestion.type === 'short_answer' && currentQuestionAnswered)
+    ) {
+      return;
+    }
+
+    const startedAt = Date.now();
+    setSecondsRemaining(QUESTION_TIME_LIMIT);
+    const timer = setInterval(() => {
+      const remaining = Math.max(
+        0,
+        QUESTION_TIME_LIMIT - Math.floor((Date.now() - startedAt) / 1000),
+      );
+      setSecondsRemaining(remaining);
+      if (remaining === 0) {
+        clearInterval(timer);
+        setTimedOutQuestions((previous) => ({ ...previous, [activeQuestion.id]: true }));
+        if (activeQuestion.type !== 'short_answer') {
+          const result = gradeChoiceQuestions([activeQuestion], {
+            [activeQuestion.id]: answersRef.current[activeQuestion.id] ?? '',
+          })[0];
+          setResults((previous) => [
+            ...previous.filter((item) => item.questionId !== activeQuestion.id),
+            result,
+          ]);
+          if (result.correct) setCelebrationNonce((nonce) => nonce + 1);
+        }
+      }
+    }, 250);
+
+    return () => clearInterval(timer);
+  }, [phase, activeQuestion, currentQuestionAnswered, currentQuestionSettled]);
 
   const handleSetAnswer = useCallback(
     (questionId: string, value: string | string[]) => {
@@ -773,8 +1017,27 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
     [attemptId, runtimeWriter, sceneId, stageId],
   );
 
+  const handleCheckCurrentChoice = useCallback(() => {
+    if (
+      !activeQuestion ||
+      activeQuestion.type === 'short_answer' ||
+      currentQuestionSettled ||
+      !hasQuizAnswer(answers[activeQuestion.id])
+    ) {
+      return;
+    }
+    const result = gradeChoiceQuestions([activeQuestion], answers)[0];
+    if (!result) return;
+    setResults((previous) => [
+      ...previous.filter((item) => item.questionId !== activeQuestion.id),
+      result,
+    ]);
+    if (result.correct) setCelebrationNonce((nonce) => nonce + 1);
+  }, [activeQuestion, answers, currentQuestionSettled]);
+
   const handleSubmit = useCallback(async () => {
     if (!attemptId) return;
+    stopQuizMusic();
     setPhase('submitting');
     await runQuizPersistenceTransition(
       () => persistQuizSubmission({ stageId, sceneId, attemptId, answers }, runtimeWriter),
@@ -785,7 +1048,7 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
         setRuntimeGate({ status: 'error' });
       },
     );
-  }, [attemptId, answers, runtimeWriter, sceneId, stageId, viewLifetime]);
+  }, [attemptId, answers, runtimeWriter, sceneId, stageId, viewLifetime, stopQuizMusic]);
 
   // When entering grading phase, grade choice questions locally + call API for short-answer
   useEffect(() => {
@@ -845,9 +1108,13 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
       () => persistQuizRetry({ stageId, sceneId, attemptId }, runtimeWriter),
       viewLifetime,
       () => {
+        stopQuizMusic();
         setPhase('not_started');
+        setActiveQuestionIndex(0);
         setAnswers({});
         setResults([]);
+        setTimedOutQuestions({});
+        setCelebrationNonce(0);
         setRetrying(false);
       },
       (error) => {
@@ -860,7 +1127,22 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
         setRuntimeGate({ status: 'error' });
       },
     );
-  }, [attemptId, retrying, runtimeWriter, sceneId, stageId, viewLifetime]);
+  }, [attemptId, retrying, runtimeWriter, sceneId, stageId, viewLifetime, stopQuizMusic]);
+
+  const handleStart = useCallback(() => {
+    if (musicEnabled) quizMusicRef.current = createQuizMusic();
+    setPhase('answering');
+  }, [musicEnabled]);
+
+  const toggleMusic = useCallback(() => {
+    if (musicEnabled) {
+      stopQuizMusic();
+      setMusicEnabled(false);
+      return;
+    }
+    if (phase === 'answering') quizMusicRef.current = createQuizMusic();
+    setMusicEnabled(true);
+  }, [musicEnabled, phase, stopQuizMusic]);
 
   const earnedScore = useMemo(() => results.reduce((sum, r) => sum + r.earned, 0), [results]);
 
@@ -896,7 +1178,7 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
   }
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-900 overflow-hidden flex flex-col">
+    <div className="w-full h-full bg-[#101827] text-white overflow-hidden flex flex-col">
       <AnimatePresence mode="wait">
         {phase === 'not_started' && (
           <motion.div
@@ -909,7 +1191,7 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
             <QuizCover
               questionCount={questions.length}
               totalPoints={totalPoints}
-              onStart={() => setPhase('answering')}
+              onStart={handleStart}
             />
           </motion.div>
         )}
@@ -920,76 +1202,188 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="flex-1 flex flex-col min-h-0"
+            className="relative flex min-h-0 flex-1 items-center justify-center p-2 sm:p-4"
           >
-            {/* Header bar */}
-            <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur shrink-0">
-              <div className="flex items-center gap-2">
-                <PieChart className="w-4 h-4 text-violet-500" />
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  {t('quiz.answering')}
-                </span>
-                <span className="text-xs text-gray-400 ml-1">
-                  {
-                    Object.keys(answers).filter((k) => {
-                      const a = answers[k];
-                      if (Array.isArray(a)) return a.length > 0;
-                      return typeof a === 'string' && a.trim().length > 0;
-                    }).length
-                  }{' '}
-                  / {questions.length}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleSubmit()}
-                disabled={!allAnswered}
-                className={cn(
-                  'px-4 py-1.5 rounded-lg text-xs font-medium transition-all',
-                  allAnswered
-                    ? 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-sm hover:shadow-md hover:shadow-violet-200/50 dark:hover:shadow-violet-900/50 active:scale-[0.97]'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed',
-                )}
-              >
-                {t('quiz.submitAnswers')}
-              </button>
-            </div>
-
-            {/* Questions */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              {questions.map((q, i) => {
-                if (q.type === 'single') {
-                  return (
-                    <SingleChoiceQuestion
-                      key={q.id}
-                      question={q}
-                      index={i}
-                      value={answers[q.id] as string | undefined}
-                      onChange={(v) => handleSetAnswer(q.id, v)}
-                    />
-                  );
-                }
-                if (q.type === 'multiple') {
-                  return (
-                    <MultipleChoiceQuestion
-                      key={q.id}
-                      question={q}
-                      index={i}
-                      value={answers[q.id] as string[] | undefined}
-                      onChange={(v) => handleSetAnswer(q.id, v)}
-                    />
-                  );
-                }
-                return (
-                  <ShortAnswerQuestion
-                    key={q.id}
-                    question={q}
-                    index={i}
-                    value={answers[q.id] as string | undefined}
-                    onChange={(v) => handleSetAnswer(q.id, v)}
+            <div className="flex h-full max-h-[780px] min-h-0 w-full max-w-[960px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111b2d] shadow-2xl shadow-black/30">
+              <div className="shrink-0 border-b border-white/10 bg-[#101827]">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="flex items-center gap-2 font-bold text-white">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-violet-400" />
+                      {t('quiz.answering')}
+                    </span>
+                    <span className="text-white/50">
+                      {activeQuestionIndex + 1} / {questions.length}
+                    </span>
+                    <span className="rounded-full bg-amber-500/20 px-3 py-1 font-bold text-amber-200">
+                      {earnedScore} {t('quiz.pointsSuffix')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'flex min-w-[76px] items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-xl font-black tabular-nums',
+                        secondsRemaining <= 5 &&
+                          !currentQuestionResult &&
+                          'bg-red-500/20 text-red-200',
+                      )}
+                    >
+                      <Timer className="h-4 w-4" /> {secondsRemaining}s
+                    </span>
+                    <button
+                      type="button"
+                      onClick={toggleMusic}
+                      aria-label={musicEnabled ? t('quiz.muteMusic') : t('quiz.enableMusic')}
+                      title={musicEnabled ? t('quiz.muteMusic') : t('quiz.enableMusic')}
+                      className="rounded-full p-2 text-white/80 transition hover:bg-white/10 hover:text-white"
+                    >
+                      {musicEnabled ? (
+                        <Volume2 className="h-5 w-5" />
+                      ) : (
+                        <VolumeX className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className="h-2 w-full bg-white/10"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={questions.length}
+                  aria-valuenow={activeQuestionIndex + (currentQuestionAnswered ? 1 : 0)}
+                >
+                  <div
+                    className="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-amber-400 transition-all duration-300"
+                    style={{
+                      width: `${questions.length ? ((activeQuestionIndex + (currentQuestionAnswered ? 1 : 0)) / questions.length) * 100 : 0}%`,
+                    }}
                   />
-                );
-              })}
+                </div>
+                <div className="h-1 w-full bg-white/5" aria-hidden="true">
+                  <div
+                    className={cn(
+                      'h-full transition-[width,background-color] duration-200',
+                      secondsRemaining <= 5 ? 'bg-red-400' : 'bg-amber-300',
+                    )}
+                    style={{ width: `${(secondsRemaining / QUESTION_TIME_LIMIT) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto bg-[#1a2739] p-3 sm:p-6">
+                {activeQuestion && (
+                  <div className="my-auto w-full max-w-[800px]">
+                    {activeQuestion.type === 'single' ? (
+                      <SingleChoiceQuestion
+                        key={activeQuestion.id}
+                        question={activeQuestion}
+                        index={activeQuestionIndex}
+                        value={answers[activeQuestion.id] as string | undefined}
+                        onChange={(v) => handleSetAnswer(activeQuestion.id, v)}
+                        disabled={currentQuestionSettled}
+                        result={currentQuestionResult}
+                        gameMode
+                      />
+                    ) : activeQuestion.type === 'multiple' ? (
+                      <MultipleChoiceQuestion
+                        key={activeQuestion.id}
+                        question={activeQuestion}
+                        index={activeQuestionIndex}
+                        value={answers[activeQuestion.id] as string[] | undefined}
+                        onChange={(v) => handleSetAnswer(activeQuestion.id, v)}
+                        disabled={currentQuestionSettled}
+                        result={currentQuestionResult}
+                        gameMode
+                      />
+                    ) : (
+                      <ShortAnswerQuestion
+                        key={activeQuestion.id}
+                        question={activeQuestion}
+                        index={activeQuestionIndex}
+                        value={answers[activeQuestion.id] as string | undefined}
+                        onChange={(v) => handleSetAnswer(activeQuestion.id, v)}
+                        disabled={currentQuestionSettled}
+                        gameMode
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 bg-[#080e1d] px-3 py-3 sm:px-6">
+                <button
+                  type="button"
+                  onClick={() => setActiveQuestionIndex((index) => Math.max(0, index - 1))}
+                  disabled={activeQuestionIndex === 0}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold text-white/75 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 sm:px-4"
+                >
+                  <ChevronLeft className="h-4 w-4" />{' '}
+                  <span className="hidden sm:inline">{t('quiz.previousQuestion')}</span>
+                </button>
+                <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 overflow-x-auto px-1 sm:gap-2">
+                  {questions.map((question, index) => {
+                    const settled =
+                      results.some((result) => result.questionId === question.id) ||
+                      (question.type === 'short_answer' && hasQuizAnswer(answers[question.id])) ||
+                      !!timedOutQuestions[question.id];
+                    return (
+                      <button
+                        key={question.id}
+                        type="button"
+                        onClick={() => setActiveQuestionIndex(index)}
+                        aria-label={`${index + 1} / ${questions.length}`}
+                        aria-current={index === activeQuestionIndex ? 'step' : undefined}
+                        className={cn(
+                          'h-2.5 w-2.5 shrink-0 rounded-full transition-all',
+                          index === activeQuestionIndex
+                            ? 'h-3.5 w-3.5 bg-violet-400 ring-2 ring-violet-300/30'
+                            : settled
+                              ? 'bg-violet-400/70'
+                              : 'bg-white/25 hover:bg-white/50',
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+                {activeQuestion &&
+                activeQuestion.type !== 'short_answer' &&
+                !currentQuestionResult &&
+                !currentQuestionTimedOut ? (
+                  <button
+                    type="button"
+                    onClick={handleCheckCurrentChoice}
+                    disabled={!currentQuestionAnswered}
+                    className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#151b2a] shadow-md transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-40 sm:px-6"
+                  >
+                    {t('quiz.checkAnswer')} <Check className="h-4 w-4" />
+                  </button>
+                ) : activeQuestionIndex === questions.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleSubmit()}
+                    disabled={!allQuestionsSettled}
+                    className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#151b2a] shadow-md transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-40 sm:px-6"
+                  >
+                    {t('quiz.submitAnswers')} <Check className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveQuestionIndex((index) => Math.min(questions.length - 1, index + 1))
+                    }
+                    disabled={
+                      activeQuestion?.type === 'short_answer'
+                        ? !currentQuestionAnswered && !currentQuestionTimedOut
+                        : !currentQuestionResult && !currentQuestionTimedOut
+                    }
+                    className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#151b2a] shadow-md transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-40 sm:px-6"
+                  >
+                    {t('quiz.nextQuestion')} <ChevronRight className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              {celebrationNonce > 0 && <KahootFireworks key={celebrationNonce} />}
             </div>
           </motion.div>
         )}
@@ -1000,7 +1394,7 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center gap-5"
+            className="flex-1 flex flex-col items-center justify-center gap-5 text-white"
           >
             <motion.div
               animate={{ rotate: 360 }}
@@ -1009,10 +1403,8 @@ export function QuizView({ questions, sceneId, stageId }: QuizViewProps) {
               <Loader2 className="w-10 h-10 text-violet-500" />
             </motion.div>
             <div className="text-center">
-              <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
-                {t('quiz.aiGrading')}
-              </p>
-              <p className="text-sm text-gray-400 mt-1">{t('quiz.aiGradingWait')}</p>
+              <p className="text-base font-semibold text-white">{t('quiz.aiGrading')}</p>
+              <p className="text-sm text-white/70 mt-1">{t('quiz.aiGradingWait')}</p>
             </div>
             <div className="flex gap-1 mt-2">
               {[0, 1, 2].map((i) => (

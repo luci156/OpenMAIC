@@ -18,10 +18,30 @@ const DEFAULT_THEME = {
   backgroundColor: '#ffffff',
   themeColors: ['#5b9bd5', '#ed7d31', '#a5a5a5', '#ffc000', '#4472c4'],
   fontColor: '#333333',
-  fontName: 'Microsoft YaHei',
+  fontName: 'Times New Roman',
   outline: { color: '#d14424', width: 2, style: 'solid' },
   shadow: { h: 0, v: 0, blur: 10, color: '#000000' },
 };
+
+function applyTimesNewRoman(elements: GeneratedSlideContent['elements']) {
+  return elements.map((element) => {
+    if (element.type !== 'text') return element;
+    const content = element.content.replace(
+      /<(p|span|strong|b|em|i|u|h[1-6])\b([^>]*)>/gi,
+      (_tag, name: string, attributes: string) => {
+        const styleMatch = attributes.match(/\sstyle=(['"])(.*?)\1/i);
+        const previous = styleMatch?.[2] ?? '';
+        const style = previous
+          .replace(/(?:^|;)\s*font-family\s*:[^;]*/gi, '')
+          .replace(/^\s*;|;\s*$/g, '');
+        const nextStyle = [style, "font-family:'Times New Roman',serif"].filter(Boolean).join(';');
+        const rest = styleMatch ? attributes.replace(styleMatch[0], '') : attributes;
+        return `<${name}${rest} style="${nextStyle}">`;
+      },
+    );
+    return { ...element, content, defaultFontName: 'Times New Roman' };
+  });
+}
 
 /**
  * Convert generated slide content to runtime SlideContent, preserving the
@@ -38,6 +58,8 @@ export function toRuntimeSlideContent(
     viewportRatio: 0.5625,
     theme: DEFAULT_THEME,
   };
+  const existingTheme =
+    base.theme && typeof base.theme === 'object' ? (base.theme as Record<string, unknown>) : {};
   return {
     type: 'slide',
     // schemaVersion belongs at the SlideContent top level (sibling of `canvas`),
@@ -46,7 +68,8 @@ export function toRuntimeSlideContent(
     schemaVersion: CURRENT_SLIDE_CONTENT_SCHEMA_VERSION,
     canvas: {
       ...base,
-      elements: gen.elements,
+      theme: { ...existingTheme, fontName: 'Times New Roman' },
+      elements: applyTimesNewRoman(gen.elements),
       // Replacing ALL elements with freshly-minted ids strands any persisted
       // animations on `base` — they reference element ids that no longer exist
       // (mirrors how slide edit ops drop animations whose elId is deleted).

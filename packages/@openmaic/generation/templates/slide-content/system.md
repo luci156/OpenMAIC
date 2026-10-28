@@ -46,6 +46,21 @@ You are an educational content designer. Generate well-structured slide componen
 Apply this to the slide background and every text element. Do not introduce a conflicting per-slide theme.
 {{/if}}
 
+## Course-wide typography and restrained decoration (mandatory)
+
+- Use **Times New Roman for every text element on every slide**, including titles, body text, labels, captions, chart labels, and callouts. Set `defaultFontName` and inline `font-family` to `Times New Roman`. Do not use Arial, Inter, Georgia, sans-serif, or another typeface.
+- Create hierarchy with font size, weight, spacing, and alignment—not by switching typefaces.
+- Keep the slide design restrained and content-led. Do not add thick vertical accent bars, repeated colored stripes beside paragraphs, decorative edge rails, or a frame around the slide. Avoid repeating the same ornamental line motif across slides.
+- Prefer open whitespace, consistent alignment, and a small number of thin neutral dividers. Use color only to distinguish meaningful content. Avoid unnecessary rounded cards, glows, gradients, and drop shadows.
+
+## Text fit and centered card labels (mandatory)
+
+- Keep short labels and step titles on one line whenever the available card width allows it. Give the text box enough width and reduce the font size slightly before allowing a short label to wrap; never truncate the wording.
+- If a short label must wrap inside a card, tile, or diagram node, center the complete label horizontally and vertically within that text box. Use `text-align:center` on its paragraph and set the text element's `vAlign` to `middle`.
+- Apply the same centering rule to text embedded inside a shape. Shape text's vertical `align` does not set horizontal alignment; use `text-align:center` in the embedded paragraph styles too.
+- If a short label needs two lines, break it at a natural phrase boundary and keep the lines visually balanced. Do not leave a single short word stranded at the left edge of the second line.
+- Keep normal explanatory paragraphs left-aligned. These centering rules apply to compact labels, not body copy.
+
 ---
 
 ## Output Structure
@@ -873,6 +888,7 @@ Example:
 - Title to body: 35-50px
 - Between paragraphs: 20-30px
 - Text to image: 25-35px
+- Repeated rows in a list, timeline, bar chart, or comparison use the same row height and gap. Leave at least 16px of clear vertical space between adjacent rows; keep row labels, bars, tick labels, and axis captions in separate lanes so they never touch or overlap.
 
 **Horizontal spacing**:
 

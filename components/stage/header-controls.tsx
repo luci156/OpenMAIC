@@ -7,6 +7,7 @@ import {
   FileCode,
   FileDown,
   Film,
+  LogOut,
   Loader2,
   Monitor,
   Moon,
@@ -30,6 +31,8 @@ import { CircularProgress } from '@/components/ui/circular-progress';
 import { VideoExportDialog } from './video-export-dialog';
 import { LanguageSwitcher } from '../language-switcher';
 import { SettingsDialog } from '../settings';
+import { requestAppLogout } from '@/components/app-chrome';
+import { ieltsAppCopy } from '@/lib/i18n/ielts-app-copy';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -119,7 +122,7 @@ export function HeaderControls({
   showCourseActions = true,
   variant = 'default',
 }: HeaderControlsProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { theme, setTheme } = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
@@ -253,6 +256,16 @@ export function HeaderControls({
         >
           <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
         </button>
+        {showGlobalControls && (
+          <button
+            onClick={requestAppLogout}
+            className="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-800 dark:hover:text-violet-200 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-all"
+            aria-label={ieltsAppCopy(locale, 'logout')}
+            title={ieltsAppCopy(locale, 'logout')}
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Pro Switch — toggle property: on/off both clickable, not a

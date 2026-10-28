@@ -38,7 +38,7 @@ export function createDefaultTextElement(id: string): PPTTextElement {
     height: 72,
     rotate: 0,
     content: '<p>New text</p>',
-    defaultFontName: 'Inter',
+    defaultFontName: 'Times New Roman',
     defaultColor: '#111827',
     lineHeight: 1.4,
   };
@@ -64,7 +64,7 @@ export function createTextElementAtCanvasPoint(
     height,
     rotate: 0,
     content: '<p style="text-align: center"><br></p>',
-    defaultFontName: 'Inter',
+    defaultFontName: 'Times New Roman',
     defaultColor: '#333',
     lineHeight: 1.4,
   };
@@ -106,7 +106,7 @@ export function createDefaultSlide(id: string): Slide {
       backgroundColor: '#ffffff',
       themeColors: ['#5b8def', '#8b5cf6', '#10b981', '#f59e0b'],
       fontColor: '#111827',
-      fontName: 'Inter',
+      fontName: 'Times New Roman',
     },
     elements: [],
     background: { type: 'solid', color: '#ffffff' },

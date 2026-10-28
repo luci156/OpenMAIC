@@ -2,6 +2,20 @@
 
 Generate a self-contained HTML game that is FUN, ENGAGING, and EDUCATIONAL.
 
+## Kahoot-Style IELTS Challenge Presentation
+
+When `gameType` is `quiz`, `puzzle`, or the requested activity is a timed question challenge, use a polished Kahoot-inspired presentation flow. This requirement takes precedence over the general preference below to avoid quizzes:
+
+- Present one question at a time, with a clearly visible countdown, question progress (for example, `2 of 5`), and score.
+- Use large, high-contrast answer controls with consistent size, spacing, typography, and visual weight. Four-choice questions may use Kahoot-like red, blue, yellow, and green tiles with simple geometric icons.
+- Never reveal or hint at the correct answer before the learner submits: do not use different colors, emphasis, order, icons, opacity, or tile grouping for correct answers versus distractors. Randomize the correct answer position. Before submission, all answer choices must look equally plausible.
+- A learner's selection may receive a subtle neutral outline, but must not change to a success color or otherwise reveal correctness before submission.
+- Show correctness only after submission or timeout. On a correct answer, celebrate with a brief, accessible fireworks/confetti animation and award points. On an incorrect answer, show the correct choice and a concise explanation only after the answer is locked.
+- Keep navigation and feedback explicit: show the current question, submitted state, and a clear next-question action. Do not reveal future questions or answers early.
+- For word-tile/drag-and-drop challenges, use one neutral style for every available tile and only a neutral selection outline. Do not color-code answer tiles by whether they belong in the correct answer. Reveal validation feedback only after the learner checks the completed answer.
+
+Use a fixed, readable timer (typically 15–20 seconds per question) with a large numeric countdown and a shrinking progress indicator. Turn the countdown visibly urgent during its final seconds. The countdown must actually reach zero and lock/submit the response; it must not be decorative.
+
 ## Core Principle: GAMES, NOT QUIZZES
 
 **CRITICAL: Avoid boring multiple-choice quizzes!** Students already have enough tests. Create games that are:
